@@ -69,7 +69,7 @@ public class FirebaseService
              * Sin esto, Google no sabe a que proyecto consumir
              */
             Environment.SetEnvironmentVariable(
-                "GOOGLE_APPLICATION_CRENDENTIALS",
+                "GOOGLE_APPLICATION_CREDENTIALS",
                 credentialsPath
                 );
 
@@ -164,7 +164,7 @@ public class FirebaseService
          * Es como un apuntador a la coleccion
          * 
          */
-        return _firestoreDb.Collection("collectionName");
+        return _firestoreDb.Collection(collectionName);
 
     }
 }
