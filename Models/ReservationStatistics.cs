@@ -25,4 +25,6 @@ public class ReservationStatistics
     public DateTime PeriodEnd { get; set; }
 
     public DateTime GeneratedAt { get; set; }
+    
+    //Prueba de commit
 }
