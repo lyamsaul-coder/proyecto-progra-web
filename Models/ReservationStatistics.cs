@@ -27,4 +27,5 @@ public class ReservationStatistics
     public DateTime GeneratedAt { get; set; }
     
     //Prueba de commit
+    //prueba 22
 }
