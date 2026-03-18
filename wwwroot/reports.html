@@ -6,6 +6,8 @@
     <title>ProBook - Reportes</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         .charts-grid {
             display: grid;
@@ -68,6 +70,34 @@
             text-align: right;
             margin-bottom: 1rem;
         }
+
+        [data-theme="dark"] .chart-card {
+            background: #1A1D26 !important;
+            border-color: #2A2D3A;
+        }
+        [data-theme="dark"] .period-card {
+            background: #1A1D26 !important;
+            border-color: #2A2D3A;
+        }
+        [data-theme="dark"] .chart-card h3 { color: #E8EAF0; }
+
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #2E7D5E;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .export-btn:hover { background: #236048; transform: translateY(-1px); }
+        .export-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
     </style>
 </head>
 <body>
@@ -97,8 +127,13 @@
     <!-- Contenido -->
     <main class="main-content">
         <div class="page-header">
-            <h1 class="page-title">Reportes</h1>
-            <p class="page-subtitle">Visualizaciones y analisis de ocupacion e ingresos</p>
+            <div>
+                <h1 class="page-title">Reportes</h1>
+                <p class="page-subtitle">Visualizaciones y analisis de ocupacion e ingresos</p>
+            </div>
+            <button class="export-btn" id="export-btn" onclick="exportPdf()" disabled>
+                📄 Exportar PDF
+            </button>
         </div>
 
         <!-- Filtro de periodo -->
@@ -199,6 +234,7 @@
     renderNavbar('manager');
 
     let barChart, pieChart, lineChart;
+    let _lastData = null; // Guarda los datos del ultimo reporte para el PDF
 
     loadReport();
 
@@ -224,6 +260,10 @@
             renderStats(data);
             renderCharts(data);
             renderTable(data);
+
+            // Guardar datos y habilitar boton de exportar
+            _lastData = data;
+            document.getElementById('export-btn').disabled = false;
 
             document.getElementById('report-meta').textContent =
                 `Periodo: ${formatDate(inputDateToApi(start) || data.periodStart.split('T')[0].split('-').reverse().join('-'))}
@@ -369,6 +409,257 @@
                     </td>
                 </tr>`;
         }).join('');
+    }
+
+    // ============================================================
+    // EXPORTAR REPORTE A PDF
+    // Usa jsPDF para texto/tablas y html2canvas para los graficos
+    // ============================================================
+    async function exportPdf() {
+        if (!_lastData) return;
+
+        const btn = document.getElementById('export-btn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Generando...';
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+            const W      = pdf.internal.pageSize.getWidth();   // 210mm
+            const MARGIN = 14;
+            const INNER  = W - MARGIN * 2;
+            let   y      = MARGIN;
+
+            // Paleta
+            const AZUL    = [44,  95,  138];
+            const GOLD    = [212, 168,  83];
+            const GRIS    = [100, 110, 125];
+            const BGGRIS  = [245, 247, 250];
+            const LINEA   = [220, 225, 232];
+
+            // ---- Encabezado ----
+            pdf.setFillColor(...AZUL);
+            pdf.rect(0, 0, W, 28, 'F');
+
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(20);
+            pdf.setTextColor(255, 255, 255);
+            pdf.text('ProBook', MARGIN, 13);
+
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(9);
+            pdf.setTextColor(200, 215, 230);
+            pdf.text('Hospedaje digital, experiencias personalizadas', MARGIN, 19);
+
+            // Fecha generacion (derecha)
+            const ahora = new Date().toLocaleString('es-HN');
+            pdf.setFontSize(8);
+            pdf.text('Generado: ' + ahora, W - MARGIN, 13, { align: 'right' });
+
+            y = 36;
+
+            // ---- Titulo del reporte ----
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(14);
+            pdf.setTextColor(...AZUL);
+            pdf.text('Reporte de Ocupacion e Ingresos', MARGIN, y);
+            y += 5;
+
+            // Periodo
+            const metaEl = document.getElementById('report-meta');
+            const meta   = metaEl ? metaEl.textContent.trim() : '';
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(8.5);
+            pdf.setTextColor(...GRIS);
+            pdf.text(meta, MARGIN, y);
+            y += 8;
+
+            // Linea separadora dorada
+            pdf.setDrawColor(...GOLD);
+            pdf.setLineWidth(0.6);
+            pdf.line(MARGIN, y, W - MARGIN, y);
+            y += 6;
+
+            // ---- Cards de resumen ----
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(10);
+            pdf.setTextColor(...AZUL);
+            pdf.text('RESUMEN GENERAL', MARGIN, y);
+            y += 4;
+
+            const stats = [
+                { label: 'Total habitaciones', value: String(_lastData.totalRooms) },
+                { label: 'Noches reservadas',  value: String(_lastData.totalNightsReserved) },
+                { label: 'Ocupacion',          value: _lastData.occupancyPercentage + '%' },
+                { label: 'Ingresos totales',   value: formatCurrency(_lastData.totalRevenue) }
+            ];
+
+            const cardW = INNER / 4 - 2;
+            stats.forEach((s, i) => {
+                const cx = MARGIN + i * (cardW + 2.5);
+
+                // Fondo card
+                pdf.setFillColor(...BGGRIS);
+                pdf.roundedRect(cx, y, cardW, 16, 2, 2, 'F');
+
+                // Valor grande
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(11);
+                pdf.setTextColor(...AZUL);
+                pdf.text(s.value, cx + cardW / 2, y + 7, { align: 'center' });
+
+                // Label
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(7);
+                pdf.setTextColor(...GRIS);
+                pdf.text(s.label, cx + cardW / 2, y + 13, { align: 'center' });
+            });
+            y += 22;
+
+            // ---- Graficos (html2canvas) ----
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(10);
+            pdf.setTextColor(...AZUL);
+            pdf.text('GRAFICOS', MARGIN, y);
+            y += 4;
+
+            const canvasIds = ['chart-bars', 'chart-pie', 'chart-line'];
+            const chartTitles = [
+                'Reservas por tipo de habitacion',
+                'Distribucion de ingresos',
+                'Tendencia de ocupacion temporal'
+            ];
+
+            // Los dos primeros van en fila (mitad de ancho cada uno)
+            const halfW = (INNER - 4) / 2;
+
+            for (let i = 0; i < canvasIds.length; i++) {
+                const canvas = document.getElementById(canvasIds[i]);
+                if (!canvas) continue;
+
+                const imgData = canvas.toDataURL('image/png');
+                const isLast  = i === 2; // chart-line ocupa todo el ancho
+
+                // Titulo del grafico
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(8);
+                pdf.setTextColor(...AZUL);
+
+                if (i === 0) {
+                    // Barras — izquierda
+                    pdf.text(chartTitles[i], MARGIN, y);
+                } else if (i === 1) {
+                    // Circular — derecha (mismo y que barras)
+                    pdf.text(chartTitles[i], MARGIN + halfW + 4, y);
+                } else {
+                    // Linea — nueva fila, ancho completo
+                    y += 2;
+                    pdf.text(chartTitles[i], MARGIN, y);
+                }
+
+                const chartH = isLast ? 42 : 44;
+
+                if (i === 0) {
+                    pdf.addImage(imgData, 'PNG', MARGIN, y + 3, halfW, chartH);
+                } else if (i === 1) {
+                    pdf.addImage(imgData, 'PNG', MARGIN + halfW + 4, y + 3, halfW, chartH);
+                    y += chartH + 8; // saltar fila despues de colocar los dos
+                } else {
+                    pdf.addImage(imgData, 'PNG', MARGIN, y + 3, INNER, chartH);
+                    y += chartH + 8;
+                }
+            }
+
+            // ---- Tabla de resultados ----
+            // Nueva pagina si queda poco espacio
+            const pageH = pdf.internal.pageSize.getHeight();
+            if (y > pageH - 70) { pdf.addPage(); y = MARGIN; }
+
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(10);
+            pdf.setTextColor(...AZUL);
+            pdf.text('TABLA DE RESULTADOS', MARGIN, y);
+            y += 5;
+
+            // Cabecera de tabla
+            const cols   = ['Tipo', 'Reservas', 'Ingresos', 'Promedio/reserva', 'Participacion'];
+            const colW   = [40, 25, 40, 45, 36];
+            const rowH   = 8;
+
+            pdf.setFillColor(...AZUL);
+            pdf.rect(MARGIN, y, INNER, rowH, 'F');
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(8);
+            pdf.setTextColor(255, 255, 255);
+
+            let cx = MARGIN + 2;
+            cols.forEach((col, i) => {
+                pdf.text(col, cx, y + 5.5);
+                cx += colW[i];
+            });
+            y += rowH;
+
+            // Filas de datos
+            const types       = Object.keys(_lastData.reservationsByRoomType);
+            const totalRev    = _lastData.totalRevenue;
+
+            types.forEach((type, idx) => {
+                const reservas  = _lastData.reservationsByRoomType[type];
+                const revenue   = _lastData.revenueByRoomType[type];
+                const avg       = reservas > 0 ? (revenue / reservas) : 0;
+                const part      = totalRev > 0 ? ((revenue / totalRev) * 100).toFixed(1) + '%' : '0%';
+
+                // Fondo alternado
+                if (idx % 2 === 0) {
+                    pdf.setFillColor(...BGGRIS);
+                    pdf.rect(MARGIN, y, INNER, rowH, 'F');
+                }
+
+                pdf.setFont('helvetica', idx % 2 === 0 ? 'bold' : 'normal');
+                pdf.setFontSize(8);
+                pdf.setTextColor(40, 50, 65);
+
+                const row = [type, String(reservas), formatCurrency(revenue), formatCurrency(avg), part];
+                cx = MARGIN + 2;
+                row.forEach((val, i) => {
+                    pdf.text(val, cx, y + 5.5);
+                    cx += colW[i];
+                });
+
+                // Linea inferior de fila
+                pdf.setDrawColor(...LINEA);
+                pdf.setLineWidth(0.2);
+                pdf.line(MARGIN, y + rowH, MARGIN + INNER, y + rowH);
+
+                y += rowH;
+            });
+
+            y += 4;
+
+            // ---- Pie de pagina ----
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(7.5);
+            pdf.setTextColor(...GRIS);
+            pdf.text(
+                'ProBook © 2026  |  Sistema de Gestion Integrada de Reservas Hoteleras',
+                W / 2, pageH - 8, { align: 'center' }
+            );
+
+            // Numero de pagina
+            pdf.text('Pagina 1', W - MARGIN, pageH - 8, { align: 'right' });
+
+            // ---- Descargar ----
+            const fecha = new Date().toISOString().slice(0, 10);
+            pdf.save('ProBook-Reporte-' + fecha + '.pdf');
+
+        } catch (err) {
+            console.error('Error al exportar PDF:', err);
+            alert('Error al generar el PDF. Intenta de nuevo.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '📄 Exportar PDF';
+        }
     }
 </script>
 </body>

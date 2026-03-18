@@ -10,11 +10,16 @@ public class TestController : ControllerBase
 {
     private readonly FirebaseService _firebaseService;
     private readonly ILogger<TestController> _logger;
+    private readonly ServerInstanceService _serverInstance;
 
-    public TestController(FirebaseService firebaseService, ILogger<TestController> logger)
+    public TestController(
+        FirebaseService firebaseService,
+        ILogger<TestController> logger,
+        ServerInstanceService serverInstance)
     {
         _firebaseService = firebaseService;
         _logger = logger;
+        _serverInstance = serverInstance;
     }
 
     // GET /api/test/firebase
@@ -40,9 +45,25 @@ public class TestController : ControllerBase
     }
 
     // GET /api/test/health
+    // Usado por el frontend en todas las paginas protegidas cada 30 segundos.
+    // Ademas de verificar que la API responde, valida el claim "sid" del token
+    // contra el InstanceId actual del servidor.
+    // Si el servidor se reinicio, el InstanceId cambio y devuelve 401,
+    // lo que hace que el frontend limpie la sesion y muestre el login.
     [HttpGet("health")]
+    [Authorize]
     public IActionResult HealthCheck()
     {
+        var tokenSid = User.FindFirst("sid")?.Value;
+
+        if (string.IsNullOrEmpty(tokenSid) || tokenSid != _serverInstance.InstanceId)
+        {
+            return Unauthorized(new
+            {
+                message = "Sesion invalida: el servidor fue reiniciado. Por favor inicia sesion nuevamente."
+            });
+        }
+
         return Ok(new { status = "API Corriendo", timestamp = DateTime.UtcNow });
     }
 

@@ -5,12 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProBook - Hospedaje digital, experiencias personalizadas</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <script>
+        // Aplicar tema antes de renderizar para evitar parpadeo
+        const savedTheme = localStorage.getItem('probook_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
     <style>
         body { overflow-x: hidden; }
 
         .hero {
             min-height: 100vh;
-            background: #FFFFFF;
+            background: var(--bg-card);
             display: flex;
             flex-direction: column;
             position: relative;
@@ -19,7 +24,7 @@
         }
 
         .hero::before {
-            content: \'\';
+            content: '';
             position: absolute;
             top: 0; right: 0;
             width: 50%; height: 100%;
@@ -27,7 +32,7 @@
         }
 
         .hero::after {
-            content: \'\';
+            content: '';
             position: absolute;
             bottom: 0; left: 0; right: 0;
             height: 1px;
@@ -42,7 +47,7 @@
             position: relative;
             z-index: 10;
             border-bottom: 1px solid var(--border);
-            background: white;
+            background: var(--bg-card);
         }
 
         .hero-brand {
@@ -254,7 +259,7 @@
         }
 
         .cta::before {
-            content: \'\';
+            content: '';
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
@@ -285,6 +290,332 @@
 
         .footer span { color: var(--accent); }
 
+        /* Modo oscuro para el index */
+        [data-theme="dark"] .hero { background: var(--bg) !important; }
+        [data-theme="dark"] .hero-nav { background: var(--bg-card) !important; border-bottom-color: var(--border) !important; }
+        [data-theme="dark"] .hero-title { color: var(--text); }
+        [data-theme="dark"] .hero-desc { color: var(--text-light); }
+        [data-theme="dark"] .hero-tag { background: rgba(74,144,196,0.1); color: var(--primary); border-color: rgba(74,144,196,0.2); }
+        [data-theme="dark"] .features { background: var(--bg); }
+        [data-theme="dark"] .feature-card { background: var(--bg-card); border-color: var(--border); }
+        [data-theme="dark"] .feature-title { color: var(--text); }
+        [data-theme="dark"] .feature-desc { color: var(--text-light); }
+        [data-theme="dark"] .section-title { color: var(--text); }
+        [data-theme="dark"] .section-desc { color: var(--text-light); }
+        [data-theme="dark"] .footer { background: #0a0c12; }
+        [data-theme="dark"] .hero-image { border-color: var(--border); }
+        [data-theme="dark"] .hero-nav-links a { color: var(--text-light); }
+        [data-theme="dark"] .hero-nav-links a:hover { color: var(--primary); }
+        [data-theme="dark"] .btn-hero-secondary { color: var(--primary); border-color: var(--primary); }
+
+
+        /* ============================================================
+           CATALOGO PUBLICO
+           ============================================================ */
+        .catalog {
+            background: var(--bg-card);
+            padding: 5rem 4rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .catalog-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* Stats rapidas */
+        .catalog-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .cstat-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.1rem 2rem;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .cstat-value {
+            display: block;
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+            margin-bottom: 0.3rem;
+        }
+
+        .cstat-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Filtros */
+        .catalog-filters {
+            display: flex;
+            gap: 0.6rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .cfilter-btn {
+            padding: 0.4rem 1.1rem;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: white;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .cfilter-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+        .cfilter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* Grid de cards */
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Card de habitacion */
+        .croom-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .croom-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(44, 95, 138, 0.2);
+        }
+
+        .croom-img-wrap {
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg);
+        }
+
+        .croom-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .croom-card:hover .croom-img { transform: scale(1.04); }
+
+        .croom-type-badge {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            background: rgba(44, 95, 138, 0.9);
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+            letter-spacing: 0.03em;
+        }
+
+        .croom-rate-badge {
+            position: absolute;
+            bottom: 0.75rem;
+            right: 0.75rem;
+            background: rgba(212, 168, 83, 0.95);
+            color: white;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .croom-body {
+            padding: 1.25rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .croom-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.6rem;
+        }
+
+        .croom-number {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .croom-capacity {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .croom-desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 0.85rem;
+            flex: 1;
+        }
+
+        .croom-amenities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .croom-amenity {
+            font-size: 0.7rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.2rem 0.55rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .croom-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 0.85rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .croom-price {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .croom-price-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .croom-reserve-btn {
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1.1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .croom-reserve-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Skeletons de carga */
+        .croom-skeleton {
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            height: 360px;
+            animation: skel-pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes skel-pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.5; }
+        }
+
+        /* CTA al final */
+        .catalog-cta {
+            text-align: center;
+            padding-top: 1rem;
+        }
+
+        .catalog-cta-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Dark mode */
+        [data-theme="dark"] .catalog {
+            background: var(--bg);
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .cstat-card {
+            background: var(--bg-card);
+            border-color: #2A2D3A;
+        }
+
+        [data-theme="dark"] .cfilter-btn {
+            background: #1A1D26;
+            border-color: #2A2D3A;
+            color: #A0A8B8;
+        }
+
+        [data-theme="dark"] .cfilter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        [data-theme="dark"] .croom-card {
+            background: #1A1D26 !important;
+            border-color: #2A2D3A;
+        }
+
+        [data-theme="dark"] .croom-number { color: #E8EAF0; }
+        [data-theme="dark"] .croom-amenity { background: #22263A; border-color: #2A2D3A; color: #A0A8B8; }
+        [data-theme="dark"] .croom-footer  { border-color: #2A2D3A; }
+        [data-theme="dark"] .croom-skeleton { background: #1A1D26; border-color: #2A2D3A; }
+        [data-theme="dark"] .catalog-cta-text { color: #A0A8B8; }
+
+        @media (max-width: 768px) {
+            .catalog { padding: 3rem 1.5rem; }
+            .catalog-stats { gap: 1rem; }
+            .catalog-grid { grid-template-columns: 1fr; }
+        }
+
         @media (max-width: 768px) {
             .hero-nav { padding: 1.5rem; }
             .hero-content { padding: 2rem 1.5rem; flex-direction: column; }
@@ -302,6 +633,9 @@
     <nav class="hero-nav">
         <a href="/" class="hero-brand">Pro<span>Book</span></a>
         <div class="hero-nav-links">
+            <button class="theme-toggle" onclick="toggleTheme()" style="border-color:rgba(44,95,138,0.3)">
+                <span>🌙</span> Oscuro
+            </button>
             <a href="/login.html">Iniciar Sesion</a>
             <a href="/register.html" class="btn-hero">Registrarse</a>
         </div>
@@ -370,6 +704,59 @@
     </div>
 </section>
 
+
+<!-- ============================================================
+     CATALOGO PUBLICO DE HABITACIONES
+     Datos en vivo desde GET /api/rooms (sin auth)
+     ============================================================ -->
+<section class="catalog">
+    <div class="catalog-inner">
+        <div class="section-header">
+            <div class="section-tag">Disponible ahora</div>
+            <h2 class="section-title">Nuestras habitaciones</h2>
+            <p class="section-desc">Explora el catalogo y reserva la que mejor se adapte a ti.</p>
+        </div>
+
+        <!-- Stats rapidas -->
+        <div class="catalog-stats" id="catalog-stats">
+            <div class="cstat-card">
+                <span class="cstat-value" id="cstat-total">--</span>
+                <span class="cstat-label">Habitaciones</span>
+            </div>
+            <div class="cstat-card">
+                <span class="cstat-value" id="cstat-types">--</span>
+                <span class="cstat-label">Tipos disponibles</span>
+            </div>
+            <div class="cstat-card">
+                <span class="cstat-value" id="cstat-from">--</span>
+                <span class="cstat-label">Desde por noche</span>
+            </div>
+        </div>
+
+        <!-- Filtros por tipo -->
+        <div class="catalog-filters" id="catalog-filters" style="display:none">
+            <button class="cfilter-btn active" data-type="all" onclick="filterRooms(this, 'all')">
+                Todas
+            </button>
+        </div>
+
+        <!-- Grid de habitaciones -->
+        <div class="catalog-grid" id="catalog-grid">
+            <!-- Skeletons mientras carga -->
+            <div class="croom-skeleton"></div>
+            <div class="croom-skeleton"></div>
+            <div class="croom-skeleton"></div>
+        </div>
+
+        <!-- CTA al final del catalogo -->
+        <div class="catalog-cta">
+            <p class="catalog-cta-text">¿Te gusto lo que ves? Crea tu cuenta y reserva en minutos.</p>
+            <a href="/register.html" class="btn-hero-primary">Crear cuenta gratis</a>
+            <a href="/login.html" class="btn-hero-secondary" style="margin-left:0.75rem">Ya tengo cuenta</a>
+        </div>
+    </div>
+</section>
+
 <section class="cta">
     <div class="cta-content">
         <h2 class="cta-title">Listo para digitalizar tu hotel?</h2>
@@ -383,13 +770,149 @@
 </footer>
 
 <script src="/js/app.js"></script>
+<script>initTheme(); document.addEventListener("DOMContentLoaded", updateThemeBtn);</script>
 <script>
-    if (isLoggedIn()) {
-        const role = getRole();
-        window.location.href = role === 'manager'
-            ? '/manager-dashboard.html'
-            : '/guest-dashboard.html';
+    // ============================================================
+    // CATALOGO PUBLICO — carga habitaciones sin autenticacion
+    // Endpoint: GET /api/rooms (ya es publico en RoomsController)
+    // ============================================================
+
+    const IMG_MAP = {
+        'Simple':    'https://i.imgur.com/CmaHmWN.png',
+        'Doble':     'https://i.imgur.com/LVbGuzF.png',
+        'Suite':     'https://i.imgur.com/C3RYOAp.png',
+        'Suite VIP': 'https://i.imgur.com/tIaJ89i.png',
+        'Deluxe':    'https://i.imgur.com/AvNZrR8.png',
+        'Familiar':  'https://i.imgur.com/AEAor06.png'
+    };
+
+    function getRoomImg(type, url) {
+        if (url && url !== 'string' && url.startsWith('http')) return url;
+        return IMG_MAP[type] || 'https://i.imgur.com/CmaHmWN.png';
     }
+
+    function fmtCurrency(n) {
+        return 'L. ' + parseFloat(n).toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    let _allRooms = [];
+
+    async function loadCatalog() {
+        try {
+            const rooms = await fetch(API_URL + '/Rooms').then(r => r.json());
+            _allRooms = Array.isArray(rooms) ? rooms : [];
+
+            // Stats
+            const types  = [...new Set(_allRooms.map(r => r.roomType))];
+            const minRate = _allRooms.length ? Math.min(..._allRooms.map(r => r.baseRate)) : 0;
+            document.getElementById('cstat-total').textContent  = _allRooms.length;
+            document.getElementById('cstat-types').textContent  = types.length;
+            document.getElementById('cstat-from').textContent   = fmtCurrency(minRate);
+
+            // Botones de filtro por tipo
+            const filtersEl = document.getElementById('catalog-filters');
+            types.forEach(t => {
+                const btn = document.createElement('button');
+                btn.className    = 'cfilter-btn';
+                btn.dataset.type = t;
+                btn.textContent  = t;
+                btn.onclick      = function() { filterRooms(this, t); };
+                filtersEl.appendChild(btn);
+            });
+            filtersEl.style.display = 'flex';
+
+            renderRooms(_allRooms);
+        } catch (e) {
+            console.error('Error en loadCatalog:', e);
+            document.getElementById('catalog-grid').innerHTML =
+                '<p style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:2rem">No se pudieron cargar las habitaciones en este momento.</p>';
+        }
+    }
+
+    function filterRooms(btn, type) {
+        document.querySelectorAll('.cfilter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filtered = type === 'all' ? _allRooms : _allRooms.filter(r => r.roomType === type);
+        renderRooms(filtered);
+    }
+
+    function renderRooms(rooms) {
+        const grid = document.getElementById('catalog-grid');
+
+        if (!rooms.length) {
+            grid.innerHTML = '<p style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:2rem">No hay habitaciones de este tipo.</p>';
+            return;
+        }
+
+        grid.innerHTML = rooms.map(r => {
+            const img       = getRoomImg(r.roomType, r.photoUrl);
+            // amenities llega como array desde el backend (List<string>)
+            // Si por alguna razon llegara como string, lo convertimos tambien
+            const amenities = Array.isArray(r.amenities)
+                ? r.amenities.slice(0, 4)
+                : (r.amenities || '').split(',').map(a => a.trim()).filter(Boolean).slice(0, 4);
+            const desc      = r.description || 'Habitacion disponible para reserva.';
+
+            return '<div class="croom-card">' +
+                '<div class="croom-img-wrap">' +
+                '<img class="croom-img" src="' + img + '" alt="Hab. ' + r.roomNumber + '" onerror="this.src=&apos;https://i.imgur.com/CmaHmWN.png&apos;">' +
+                '<span class="croom-type-badge">' + r.roomType + '</span>' +
+                '<span class="croom-rate-badge">' + fmtCurrency(r.baseRate) + '/noche</span>' +
+                '</div>' +
+                '<div class="croom-body">' +
+                '<div class="croom-header">' +
+                '<span class="croom-number">Habitacion ' + r.roomNumber + '</span>' +
+                '<span class="croom-capacity">👤 ' + r.capacity + ' persona' + (r.capacity !== 1 ? 's' : '') + '</span>' +
+                '</div>' +
+                '<p class="croom-desc">' + desc + '</p>' +
+                '<div class="croom-amenities">' +
+                amenities.map(a => '<span class="croom-amenity">' + a + '</span>').join('') +
+                '</div>' +
+                '<div class="croom-footer">' +
+                '<div>' +
+                '<div class="croom-price">' + fmtCurrency(r.baseRate) + '</div>' +
+                '<div class="croom-price-label">por noche + impuestos</div>' +
+                '</div>' +
+                '<a href="/register.html" class="croom-reserve-btn">Reservar</a>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCatalog);
+</script>
+
+<script>
+    // Verificar si hay sesion activa y si el token sigue siendo valido
+    async function checkSession() {
+        if (!isLoggedIn()) return;
+
+        try {
+            // Hacer una peticion al backend para validar el token
+            const response = await fetch(`${API_URL}/Test/health`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+
+            if (response.ok) {
+                // Token valido, redirigir al dashboard
+                const role = getRole();
+                window.location.href = role === 'manager'
+                    ? '/manager-dashboard.html'
+                    : '/guest-dashboard.html';
+            } else {
+                // Token invalido o expirado, limpiar sesion
+                localStorage.removeItem('probook_token');
+                localStorage.removeItem('probook_user');
+            }
+        } catch (error) {
+            // El servidor no esta disponible, limpiar sesion
+            localStorage.removeItem('probook_token');
+            localStorage.removeItem('probook_user');
+        }
+    }
+
+    checkSession();
 </script>
 </body>
 </html>

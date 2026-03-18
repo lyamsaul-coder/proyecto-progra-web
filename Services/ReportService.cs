@@ -5,7 +5,7 @@ namespace Proyecto_Progra_Web.API.Services;
 
 /// <summary>
 /// ReportService calcula estadisticas en tiempo real leyendo las colecciones
-/// de Firestore. No almacena documentos de estadisticas; todo se computa al momento
+/// de Firestore. No almacena documentos de estadisticas;
 /// de la peticion para garantizar datos actualizados segun lo indica el PDF.
 /// </summary>
 public class ReportService : IReportService
@@ -29,9 +29,20 @@ public class ReportService : IReportService
     {
         try
         {
-            // Si no se pasan fechas, usar el ultimo mes completo como periodo por defecto
-            var start = periodStart ?? DateTime.UtcNow.AddMonths(-1);
-            var end = periodEnd ?? DateTime.UtcNow;
+            
+            //Manejo de las diferencias de hora
+            // Honduras esta en UTC-6
+            // Para que "hoy" en Honduras sea correcto, ajustamos los limites del periodo
+            // Si el usuario filtra del 17 al 18, en UTC eso es del 17 06:00 al 19 06:00
+            const int hondurasOffsetHours = 6;
+
+            var start = periodStart.HasValue
+                ? periodStart.Value.Date.AddHours(hondurasOffsetHours)
+                : DateTime.UtcNow.AddMonths(-1);
+
+            var end = periodEnd.HasValue
+                ? periodEnd.Value.Date.AddDays(1).AddHours(hondurasOffsetHours)
+                : DateTime.UtcNow;
 
             var roomsCollection = _firebaseService.GetCollection("rooms");
             var reservationsCollection = _firebaseService.GetCollection("reservations");
@@ -39,12 +50,19 @@ public class ReportService : IReportService
             // Obtener todas las habitaciones registradas
             var roomsSnapshot = await roomsCollection.GetSnapshotAsync();
 
-            // Obtener todas las reservas del periodo solicitado
-            // Se filtra por Timestamp (fecha en que se creo la reserva)
-            var reservationsSnapshot = await reservationsCollection
-                .WhereGreaterThanOrEqualTo("Timestamp", start)
-                .WhereLessThanOrEqualTo("Timestamp", end)
-                .GetSnapshotAsync();
+            // Obtener todas las reservas y filtrar en memoria por periodo
+            // Firestore requiere indices compuestos para filtros multiples sobre el mismo campo
+            var allReservationsSnapshot = await reservationsCollection.GetSnapshotAsync();
+
+            var reservationsSnapshot = allReservationsSnapshot.Documents
+                .Where(doc =>
+                {
+                    var d = doc.ToDictionary();
+                    if (!d.ContainsKey("Timestamp")) return false;
+                    var ts = ((Google.Cloud.Firestore.Timestamp)d["Timestamp"]).ToDateTime();
+                    return ts >= start && ts <= end;
+                })
+                .ToList();
 
             var totalRooms = roomsSnapshot.Count;
 
@@ -60,7 +78,7 @@ public class ReportService : IReportService
             // Acumulador para tendencia: clave = fecha, valor = cantidad de reservas
             var occupancyTrendRaw = new Dictionary<string, int>();
 
-            foreach (var doc in reservationsSnapshot.Documents)
+            foreach (var doc in reservationsSnapshot)
             {
                 var dict = doc.ToDictionary();
 
@@ -98,7 +116,7 @@ public class ReportService : IReportService
             }
 
             // Porcentaje de ocupacion: habitaciones que tienen al menos una reserva / total
-            var roomsWithReservations = reservationsSnapshot.Documents
+            var roomsWithReservations = reservationsSnapshot
                 .Select(d => d.ToDictionary()["RoomId"].ToString())
                 .Distinct()
                 .Count();
@@ -107,10 +125,18 @@ public class ReportService : IReportService
                 ? Math.Round((double)roomsWithReservations / totalRooms * 100, 2)
                 : 0;
 
-            // Ordenar tendencia por fecha ascendente para el grafico de lineas
-            var occupancyTrend = occupancyTrendRaw
-                .OrderBy(kv => kv.Key)
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
+            // Rellenar TODOS los dias del periodo con 0 si no tienen reservas
+            // Esto garantiza que el grafico muestre el rango completo, no solo dias con datos
+            var occupancyTrend = new Dictionary<string, int>();
+            var currentDay = start.Date;
+            while (currentDay <= end.Date)
+            {
+                var key = currentDay.ToString("yyyy-MM-dd");
+                occupancyTrend[key] = occupancyTrendRaw.ContainsKey(key)
+                    ? occupancyTrendRaw[key]
+                    : 0;
+                currentDay = currentDay.AddDays(1);
+            }
 
             return new ReservationStatistics
             {

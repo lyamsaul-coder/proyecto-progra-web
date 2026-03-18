@@ -17,6 +17,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Registro de servicios
 // --------------------------------------------------------
 
+// ServerInstanceService como Singleton: genera un GUID unico al arrancar el servidor.
+// Se incluye en cada token JWT como claim "sid".
+// Si el servidor se reinicia, el GUID cambia y todos los tokens anteriores
+// quedan invalidos automaticamente — el frontend los detecta y cierra sesion.
+builder.Services.AddSingleton<ServerInstanceService>();
+
 // FirebaseService como Singleton: una sola instancia para toda la app
 // porque la conexion a Firestore es costosa de inicializar
 builder.Services.AddSingleton<FirebaseService>();

@@ -25,9 +25,9 @@ public class ReservationService : IReservationService
         _logger = logger;
     }
 
-    // --------------------------------------------------------
+    
     // CREATE RESERVATION
-    // --------------------------------------------------------
+    
 
     public async Task<ReservationResponseDto> CreateReservation(
         CreateReservationDto createReservationDto, string userId)
@@ -42,7 +42,9 @@ public class ReservationService : IReservationService
             if (checkIn >= checkOut)
                 throw new ArgumentException("La fecha de entrada debe ser anterior a la fecha de salida");
 
-            if (checkIn < DateTime.UtcNow.Date)
+            // Comparar con la fecha actual en hora de Honduras (UTC-6)
+            var hondurasNow = DateTime.UtcNow.AddHours(-6).Date;
+            if (checkIn < hondurasNow)
                 throw new ArgumentException("La fecha de entrada no puede ser en el pasado");
 
             var usersCollection = _firebaseService.GetCollection("users");

@@ -99,6 +99,23 @@
             gap: 0.5rem;
             justify-content: flex-end;
         }
+
+        [data-theme="dark"] .room-card {
+            background: #1A1D26 !important;
+            border-color: #2A2D3A;
+        }
+        [data-theme="dark"] .room-info-row { border-color: #2A2D3A; }
+        [data-theme="dark"] .room-info-label { color: #A0A8B8; }
+        [data-theme="dark"] .room-info-value { color: #E8EAF0; }
+        [data-theme="dark"] .room-card-footer {
+            background: #1A1D26 !important;
+            border-color: #2A2D3A;
+        }
+        [data-theme="dark"] .search-bar {
+            background: #1A1D26;
+            border-color: #2A2D3A;
+        }
+        [data-theme="dark"] .search-count { color: #A0A8B8; }
     </style>
 </head>
 <body>
@@ -184,6 +201,9 @@
                     <option>Suite VIP</option>
                     <option>Deluxe</option>
                     <option>Familiar</option>
+                    <option>Gamer</option>
+                    <option>Business</option>
+                    <option>Romantica</option>
                 </select>
             </div>
         </div>
@@ -277,7 +297,10 @@
             'Suite':     'https://i.imgur.com/C3RYOAp.png',
             'Suite VIP': 'https://i.imgur.com/tIaJ89i.png',
             'Deluxe':    'https://i.imgur.com/AvNZrR8.png',
-            'Familiar':  'https://i.imgur.com/AEAor06.png'
+            'Familiar':  'https://i.imgur.com/AEAor06.png',
+            'Gamer':     'https://i.imgur.com/8Be8IZv.png',
+            'Business':  'https://i.imgur.com/DWkpHS4.png',
+            'Romantica':  'https://i.imgur.com/NpAIpeN.png'
         };
         return map[roomType] || 'https://i.imgur.com/CmaHmWN.png';
     }

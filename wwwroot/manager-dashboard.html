@@ -5,186 +5,242 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProBook - Panel del Gerente</title>
     <link rel="stylesheet" href="/css/styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const savedTheme = localStorage.getItem('probook_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
     <style>
-        .charts-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+        .welcome-banner {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            border-radius: var(--radius-lg);
+            padding: 1.75rem 2rem;
+            color: white;
             margin-bottom: 1.5rem;
-        }
-
-        .chart-card {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .chart-card-full {
-            grid-column: 1 / -1;
-        }
-
-        .chart-title {
-            font-family: var(--font-display);
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 1rem;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 250px;
-        }
-
-        .period-form {
             display: flex;
+            align-items: center;
+            justify-content: space-between;
             gap: 1rem;
-            align-items: flex-end;
-            flex-wrap: wrap;
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome-banner::before {
+            content: "";
+            position: absolute;
+            top: -30px; right: -30px;
+            width: 160px; height: 160px;
+            background: rgba(212,168,83,0.12);
+            border-radius: 50%;
+        }
+        .welcome-banner::after {
+            content: "";
+            position: absolute;
+            bottom: -20px; right: 120px;
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        .welcome-text { position: relative; z-index: 1; }
+        .welcome-title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .welcome-subtitle { color: rgba(255,255,255,0.75); font-size: 0.88rem; }
+        .welcome-date { position: relative; z-index: 1; text-align: right; font-size: 0.82rem; color: rgba(255,255,255,0.7); line-height: 1.6; }
+        .welcome-date strong { display: block; font-size: 1.2rem; color: white; }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .quick-card {
             background: white;
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.5rem;
+            padding: 1.25rem;
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            transition: var(--transition);
             box-shadow: var(--shadow-sm);
         }
+        .quick-card:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .quick-card-icon { font-size: 1.6rem; flex-shrink: 0; }
+        .quick-card-label { font-size: 0.82rem; color: var(--text-muted); }
+        .quick-card-title { font-weight: 600; font-size: 0.92rem; }
 
-        .period-form .form-group {
-            margin-bottom: 0;
-            flex: 1;
-            min-width: 160px;
-        }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+        @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+        .dash-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
+        .dash-card-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
+        .dash-card-title { font-family: var(--font-display); font-size: 0.92rem; font-weight: 700; color: var(--text); }
+        .dash-card-link { font-size: 0.78rem; color: var(--primary); text-decoration: none; font-weight: 500; }
+        .dash-card-link:hover { text-decoration: underline; }
+        .dash-card-body { padding: 1rem 1.25rem; }
+
+        .occupancy-big { display: flex; align-items: flex-end; gap: 0.5rem; margin-bottom: 0.75rem; }
+        .occupancy-number { font-family: var(--font-display); font-size: 3rem; font-weight: 700; color: var(--primary); line-height: 1; }
+        .occupancy-unit { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+        .occupancy-bar-wrap { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; margin-bottom: 0.6rem; }
+        .occupancy-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #4A90C4); border-radius: 5px; transition: width 0.6s ease; }
+        .occupancy-meta { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted); }
+
+        .mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem; }
+        .mini-stat { background: var(--bg); border-radius: var(--radius-sm); padding: 0.75rem; }
+        .mini-stat-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 0.2rem; }
+        .mini-stat-value { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--text); }
+
+        .activity-list { list-style: none; padding: 0; margin: 0; }
+        .activity-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); margin-top: 5px; flex-shrink: 0; }
+        .activity-dot.dot-gold { background: var(--accent); }
+        .activity-name { font-weight: 600; font-size: 0.85rem; color: var(--text); }
+        .activity-detail { font-size: 0.78rem; color: var(--text-muted); margin-top: 1px; }
+        .activity-time { font-size: 0.72rem; color: var(--text-muted); margin-left: auto; flex-shrink: 0; }
+
+        .room-status-list { list-style: none; padding: 0; margin: 0; }
+        .room-status-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        .room-status-item:last-child { border-bottom: none; }
+        .room-num { font-weight: 700; color: var(--text); min-width: 60px; }
+        .room-type-tag { font-size: 0.72rem; color: var(--text-muted); flex: 1; }
+        .room-reserved-by { font-size: 0.75rem; color: var(--text-muted); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .mini-empty { text-align: center; padding: 1.5rem 1rem; color: var(--text-muted); font-size: 0.85rem; }
+        .mini-empty-icon { font-size: 1.8rem; display: block; margin-bottom: 0.4rem; opacity: 0.5; }
+
+        [data-theme="dark"] .quick-card,
+        [data-theme="dark"] .dash-card { background: #1A1D26 !important; border-color: #2A2D3A; }
+        [data-theme="dark"] .dash-card-header { border-color: #2A2D3A; }
+        [data-theme="dark"] .dash-card-title,
+        [data-theme="dark"] .quick-card-title,
+        [data-theme="dark"] .activity-name,
+        [data-theme="dark"] .room-num { color: #E8EAF0; }
+        [data-theme="dark"] .quick-card-label,
+        [data-theme="dark"] .activity-detail,
+        [data-theme="dark"] .activity-time,
+        [data-theme="dark"] .room-type-tag,
+        [data-theme="dark"] .room-reserved-by,
+        [data-theme="dark"] .occupancy-meta,
+        [data-theme="dark"] .mini-stat-label { color: #A0A8B8; }
+        [data-theme="dark"] .mini-stat { background: #22263A; }
+        [data-theme="dark"] .mini-stat-value { color: #E8EAF0; }
+        [data-theme="dark"] .activity-item,
+        [data-theme="dark"] .room-status-item { border-color: #2A2D3A; }
+        [data-theme="dark"] .occupancy-bar-wrap { background: #2A2D3A; }
     </style>
 </head>
 <body>
 
-<!-- Navbar -->
 <nav class="navbar">
     <a href="/manager-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
     <div id="nav-user" class="navbar-user"></div>
 </nav>
 
 <div class="layout">
-    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-section">
             <div class="sidebar-label">Principal</div>
-            <a href="/manager-dashboard.html" class="sidebar-link active">
-                📊 Dashboard
-            </a>
-            <a href="/room-management.html" class="sidebar-link">
-                🏨 Habitaciones
-            </a>
-            <a href="/guest-list.html" class="sidebar-link">
-                👥 Huespedes
-            </a>
-            <a href="/reports.html" class="sidebar-link">
-                📈 Reportes
-            </a>
+            <a href="/manager-dashboard.html" class="sidebar-link active">📊 Dashboard</a>
+            <a href="/room-management.html" class="sidebar-link">🏨 Habitaciones</a>
+            <a href="/guest-list.html" class="sidebar-link">👥 Huespedes</a>
+            <a href="/reports.html" class="sidebar-link">📈 Reportes</a>
         </div>
         <div class="sidebar-section">
             <div class="sidebar-label">Cuenta</div>
-            <button class="sidebar-link" onclick="logout()">
-                🚪 Cerrar sesion
-            </button>
+            <button class="sidebar-link" onclick="logout()">🚪 Cerrar sesion</button>
         </div>
     </aside>
 
-    <!-- Contenido -->
     <main class="main-content">
-        <div class="page-header">
-            <h1 class="page-title">Dashboard</h1>
-            <p class="page-subtitle">Resumen general del sistema de reservas</p>
-        </div>
 
-        <!-- Filtro de periodo -->
-        <div class="period-form">
-            <div class="form-group">
-                <label class="form-label">Fecha inicio</label>
-                <input type="date" id="period-start" class="form-control">
+        <div class="welcome-banner">
+            <div class="welcome-text">
+                <div class="welcome-title">Bienvenido, <span id="manager-name">Gerente</span> 👋</div>
+                <div class="welcome-subtitle">Aqui tienes el resumen operacional de hoy</div>
             </div>
-            <div class="form-group">
-                <label class="form-label">Fecha fin</label>
-                <input type="date" id="period-end" class="form-control">
-            </div>
-            <button class="btn btn-primary" onclick="loadStats()">
-                Aplicar filtro
-            </button>
-            <button class="btn btn-outline" onclick="clearFilter()">
-                Ver ultimo mes
-            </button>
-        </div>
-
-        <!-- Stats cards -->
-        <div class="stats-grid" id="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Habitaciones</div>
-                <div class="stat-value" id="stat-rooms">--</div>
-                <div class="stat-desc">Registradas en el sistema</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Noches Reservadas</div>
-                <div class="stat-value" id="stat-nights">--</div>
-                <div class="stat-desc">En el periodo seleccionado</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Ocupacion</div>
-                <div class="stat-value" id="stat-occupancy">--</div>
-                <div class="stat-desc">Porcentaje del periodo</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Ingresos</div>
-                <div class="stat-value" id="stat-revenue">--</div>
-                <div class="stat-desc">Total generado</div>
+            <div class="welcome-date">
+                <strong id="today-date">--</strong>
+                <span id="today-time">--:--</span>
             </div>
         </div>
 
-        <!-- Graficos -->
-        <div class="charts-grid">
-            <div class="chart-card">
-                <div class="chart-title">Reservas por tipo de habitacion</div>
-                <div class="chart-container">
-                    <canvas id="chart-bars"></canvas>
+        <div class="quick-grid">
+            <a href="/room-management.html" class="quick-card">
+                <span class="quick-card-icon">🏨</span>
+                <div><div class="quick-card-label">Gestion</div><div class="quick-card-title">Habitaciones</div></div>
+            </a>
+            <a href="/guest-list.html" class="quick-card">
+                <span class="quick-card-icon">👥</span>
+                <div><div class="quick-card-label">Listado</div><div class="quick-card-title">Huespedes</div></div>
+            </a>
+            <a href="/reports.html" class="quick-card">
+                <span class="quick-card-icon">📈</span>
+                <div><div class="quick-card-label">Analisis</div><div class="quick-card-title">Reportes</div></div>
+            </a>
+            <a href="/room-management.html" class="quick-card">
+                <span class="quick-card-icon">➕</span>
+                <div><div class="quick-card-label">Agregar</div><div class="quick-card-title">Nueva habitacion</div></div>
+            </a>
+        </div>
+
+        <div class="two-col">
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <span class="dash-card-title">📊 Ocupacion actual</span>
+                    <a href="/reports.html" class="dash-card-link">Ver reporte completo →</a>
+                </div>
+                <div class="dash-card-body">
+                    <div class="occupancy-big">
+                        <span class="occupancy-number" id="occ-pct">--</span>
+                        <span class="occupancy-unit">%</span>
+                    </div>
+                    <div class="occupancy-bar-wrap">
+                        <div class="occupancy-bar-fill" id="occ-bar" style="width:0%"></div>
+                    </div>
+                    <div class="occupancy-meta">
+                        <span id="occ-rooms-reserved">Cargando...</span>
+                        <span id="occ-total-rooms"></span>
+                    </div>
+                    <div class="mini-stats">
+                        <div class="mini-stat">
+                            <div class="mini-stat-label">Noches reservadas</div>
+                            <div class="mini-stat-value" id="occ-nights">--</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="mini-stat-label">Ingresos del mes</div>
+                            <div class="mini-stat-value" id="occ-revenue">--</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="chart-card">
-                <div class="chart-title">Distribucion de ingresos</div>
-                <div class="chart-container">
-                    <canvas id="chart-pie"></canvas>
+
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <span class="dash-card-title">🕐 Actividad reciente</span>
+                    <a href="/guest-list.html" class="dash-card-link">Ver todos →</a>
                 </div>
-            </div>
-            <div class="chart-card chart-card-full">
-                <div class="chart-title">Tendencia de ocupacion temporal</div>
-                <div class="chart-container">
-                    <canvas id="chart-line"></canvas>
+                <div class="dash-card-body" style="padding: 0 1.25rem;">
+                    <ul class="activity-list" id="activity-list">
+                        <li class="activity-item"><span class="activity-dot"></span><div><div class="activity-detail">Cargando...</div></div></li>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <!-- Tabla de resultados -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Tabla de resultados</h2>
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <span class="dash-card-title">🏨 Habitaciones reservadas</span>
+                <a href="/room-management.html" class="dash-card-link">Gestionar →</a>
             </div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Tipo de habitacion</th>
-                        <th>Reservas</th>
-                        <th>Ingresos</th>
-                        <th>Participacion</th>
-                    </tr>
-                    </thead>
-                    <tbody id="results-table">
-                    <tr><td colspan="4" class="text-center text-muted" style="padding:2rem">Cargando datos...</td></tr>
-                    </tbody>
-                </table>
+            <div class="dash-card-body" style="padding: 0 1.25rem;">
+                <ul class="room-status-list" id="room-status-list">
+                    <li class="room-status-item"><span class="activity-detail">Cargando...</span></li>
+                </ul>
             </div>
         </div>
+
     </main>
 </div>
 
@@ -193,175 +249,96 @@
     requireAuth('manager');
     renderNavbar('manager');
 
-    let barChart, pieChart, lineChart;
+    function updateClock() {
+        const now = new Date();
+        const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const days   = ['Domingo','Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'];
+        document.getElementById('today-date').textContent =
+            days[now.getDay()] + ', ' + now.getDate() + ' de ' + months[now.getMonth()] + ' ' + now.getFullYear();
+        document.getElementById('today-time').textContent =
+            now.toLocaleTimeString('es-HN', { hour: '2-digit', minute: '2-digit' });
+    }
+    updateClock();
+    setInterval(updateClock, 60000);
 
-    // Cargar estadisticas al iniciar
-    loadStats();
+    const user = getUser();
+    if (user) document.getElementById('manager-name').textContent = user.fullname.split(' ')[0];
 
-    function clearFilter() {
-        document.getElementById('period-start').value = '';
-        document.getElementById('period-end').value = '';
-        loadStats();
+    async function loadDashboard() {
+        await Promise.all([loadOccupancy(), loadRecentActivity()]);
     }
 
-    async function loadStats() {
+    async function loadOccupancy() {
         try {
-            let url = '/Reports/statistics';
-            const start = document.getElementById('period-start').value;
-            const end = document.getElementById('period-end').value;
-
-            const params = [];
-            if (start) params.push(`periodStart=${inputDateToApi(start)}`);
-            if (end) params.push(`periodEnd=${inputDateToApi(end)}`);
-            if (params.length > 0) url += '?' + params.join('&');
-
-            const data = await apiGet(url);
-            renderStats(data);
-            renderCharts(data);
-            renderTable(data);
-
-        } catch (error) {
-            console.error('Error cargando estadisticas:', error);
+            const data = await apiGet('/Reports/statistics');
+            const pct = data.occupancyPercentage ?? 0;
+            document.getElementById('occ-pct').textContent = pct;
+            document.getElementById('occ-bar').style.width = Math.min(pct, 100) + '%';
+            document.getElementById('occ-nights').textContent = data.totalNightsReserved ?? '--';
+            document.getElementById('occ-revenue').textContent = formatCurrency(data.totalRevenue ?? 0);
+            const reservedCount = Object.values(data.reservationsByRoomType || {}).reduce((a, b) => a + b, 0);
+            document.getElementById('occ-rooms-reserved').textContent = reservedCount + ' habitacion' + (reservedCount !== 1 ? 'es' : '') + ' con reservas';
+            document.getElementById('occ-total-rooms').textContent = (data.totalRooms ?? '--') + ' total';
+        } catch (err) {
+            document.getElementById('occ-pct').textContent = '?';
         }
     }
 
-    function renderStats(data) {
-        document.getElementById('stat-rooms').textContent = data.totalRooms;
-        document.getElementById('stat-nights').textContent = data.totalNightsReserved;
-        document.getElementById('stat-occupancy').textContent = data.occupancyPercentage + '%';
-        document.getElementById('stat-revenue').textContent = formatCurrency(data.totalRevenue);
+    async function loadRecentActivity() {
+        try {
+            const data = await apiGet('/Guests');
+            const guests = data.guests || [];
+            const withReservation = guests
+                .filter(g => g.hasReserved && g.reservedAt)
+                .sort((a, b) => new Date(b.reservedAt) - new Date(a.reservedAt))
+                .slice(0, 6);
+            renderActivity(withReservation);
+            renderRoomStatus(withReservation);
+        } catch (err) {
+            document.getElementById('activity-list').innerHTML =
+                '<li class="mini-empty"><span class="mini-empty-icon">\u26A0\uFE0F</span>No se pudo cargar la actividad</li>';
+        }
     }
 
-    function renderCharts(data) {
-        const labels = Object.keys(data.reservationsByRoomType);
-        const reservations = Object.values(data.reservationsByRoomType);
-        const revenues = Object.values(data.revenueByRoomType);
-        const trendLabels = Object.keys(data.occupancyTrend);
-        const trendValues = Object.values(data.occupancyTrend);
-
-        const colors = ['#2C5F8A', '#D4A853', '#2E7D5E', '#C0392B', '#8E44AD', '#E67E22'];
-
-        // Grafico de barras
-        if (barChart) barChart.destroy();
-        barChart = new Chart(document.getElementById('chart-bars'), {
-            type: 'bar',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'Reservas',
-                    data: reservations,
-                    backgroundColor: colors.slice(0, labels.length),
-                    borderRadius: 6,
-                    borderSkipped: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1 },
-                        grid: { color: 'rgba(0,0,0,0.05)' }
-                    },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-
-        // Grafico circular
-        if (pieChart) pieChart.destroy();
-        pieChart = new Chart(document.getElementById('chart-pie'), {
-            type: 'doughnut',
-            data: {
-                labels,
-                datasets: [{
-                    data: revenues,
-                    backgroundColor: colors.slice(0, labels.length),
-                    borderWidth: 2,
-                    borderColor: 'white'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { padding: 15, font: { size: 12 } }
-                    }
-                }
-            }
-        });
-
-        // Grafico de tendencia
-        if (lineChart) lineChart.destroy();
-        lineChart = new Chart(document.getElementById('chart-line'), {
-            type: 'line',
-            data: {
-                labels: trendLabels,
-                datasets: [{
-                    label: 'Reservas por dia',
-                    data: trendValues,
-                    borderColor: '#2C5F8A',
-                    backgroundColor: 'rgba(44, 95, 138, 0.08)',
-                    borderWidth: 2.5,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#2C5F8A',
-                    pointRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1 },
-                        grid: { color: 'rgba(0,0,0,0.05)' }
-                    },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-    }
-
-    function renderTable(data) {
-        const tbody = document.getElementById('results-table');
-        const types = Object.keys(data.reservationsByRoomType);
-        const totalRevenue = data.totalRevenue;
-
-        if (types.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted" style="padding:2rem">
-                    No hay datos en el periodo seleccionado</td></tr>`;
+    function renderActivity(guests) {
+        const list = document.getElementById('activity-list');
+        if (!guests.length) {
+            list.innerHTML = '<li class="mini-empty"><span class="mini-empty-icon">\uD83D\uDCCB</span>Sin reservas recientes</li>';
             return;
         }
-
-        tbody.innerHTML = types.map(type => {
-            const reservations = data.reservationsByRoomType[type];
-            const revenue = data.revenueByRoomType[type];
-            const participation = totalRevenue > 0
-                ? ((revenue / totalRevenue) * 100).toFixed(1)
-                : 0;
-
-            return `<tr>
-                    <td><strong>${type}</strong></td>
-                    <td>${reservations}</td>
-                    <td>${formatCurrency(revenue)}</td>
-                    <td>
-                        <div style="display:flex;align-items:center;gap:0.5rem">
-                            <div style="flex:1;height:6px;background:var(--border);border-radius:3px">
-                                <div style="width:${participation}%;height:100%;background:var(--primary);border-radius:3px"></div>
-                            </div>
-                            <span style="font-size:0.8rem;color:var(--text-muted)">${participation}%</span>
-                        </div>
-                    </td>
-                </tr>`;
+        list.innerHTML = guests.map((g, i) => {
+            const room  = g.roomNumber ? 'Hab. ' + g.roomNumber : '';
+            const check = g.checkInDate ? 'Check-in: ' + formatDate(g.checkInDate) : '';
+            const dot   = i % 2 === 0 ? '' : 'dot-gold';
+            const time  = g.reservedAt
+                ? new Date(g.reservedAt).toLocaleDateString('es-HN', { day:'2-digit', month:'short' })
+                : '';
+            return '<li class="activity-item">' +
+                '<span class="activity-dot ' + dot + '"></span>' +
+                '<div style="flex:1"><div class="activity-name">' + g.fullname + '</div>' +
+                '<div class="activity-detail">' + room + (room && check ? ' · ' : '') + check + '</div></div>' +
+                '<span class="activity-time">' + time + '</span></li>';
         }).join('');
     }
+
+    function renderRoomStatus(guests) {
+        const list = document.getElementById('room-status-list');
+        if (!guests.length) {
+            list.innerHTML = '<li class="mini-empty"><span class="mini-empty-icon">\uD83C\uDFE8</span>No hay habitaciones con reservas activas</li>';
+            return;
+        }
+        list.innerHTML = guests.map(g =>
+            '<li class="room-status-item">' +
+            '<span class="room-num">Hab. ' + (g.roomNumber || '--') + '</span>' +
+            '<span class="room-type-tag">' + (g.roomType || '') + '</span>' +
+            '<span class="badge badge-success" style="font-size:0.7rem">Reservada</span>' +
+            '<span class="room-reserved-by">' + g.fullname + '</span>' +
+            '<span class="activity-time">' + (g.checkInDate ? formatDate(g.checkInDate) : '') + ' \u2192 ' + (g.checkOutDate ? formatDate(g.checkOutDate) : '') + '</span>' +
+            '</li>'
+        ).join('');
+    }
+
+    loadDashboard();
 </script>
 </body>
 </html>

@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProBook - Iniciar Sesion</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <script>
+        const savedTheme = localStorage.getItem('probook_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
         body {
@@ -204,6 +208,21 @@
             .auth-panel-link { font-size: 0.8rem; }
             .auth-form-section { padding: 1.5rem; }
         }
+
+        /* Modo oscuro auth */
+        [data-theme="dark"] body { background: #0F1117; }
+        [data-theme="dark"] .auth-container {
+            background: #1A1D26;
+            border-color: #2A2D3A;
+        }
+        [data-theme="dark"] .auth-form-section {
+            background: #1A1D26;
+        }
+        [data-theme="dark"] .auth-form-title { color: #E8EAF0; }
+        [data-theme="dark"] .auth-form-subtitle { color: #A0A8B8; }
+        [data-theme="dark"] .form-label { color: #E8EAF0; }
+        [data-theme="dark"] .forgot-link { color: #4A90C4; }
+        [data-theme="dark"] .text-muted { color: #5A6478; }
     </style>
 </head>
 <body>
@@ -216,6 +235,10 @@
             <h2 class="auth-panel-title">Bienvenido de nuevo</h2>
             <p class="auth-panel-desc">Inicia sesion para gestionar tus reservas.</p>
             <a href="/register.html" class="auth-panel-link">¿No tienes cuenta? Registrate →</a>
+            <button class="theme-toggle" onclick="toggleTheme()"
+                    style="border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.85);margin-top:0.5rem">
+                <span>🌙</span> Oscuro
+            </button>
         </div>
     </div>
 
@@ -258,13 +281,30 @@
 </div>
 
 <script src="/js/app.js"></script>
+<script>initTheme(); document.addEventListener("DOMContentLoaded", updateThemeBtn);</script>
 <script>
-    // Redirigir si ya esta logueado
-    if (isLoggedIn()) {
-        window.location.href = getRole() === "manager"
-            ? "/manager-dashboard.html"
-            : "/guest-dashboard.html";
+    // Verificar si hay sesion activa y si el token sigue siendo valido
+    async function checkSession() {
+        if (!isLoggedIn()) return;
+        try {
+            const response = await fetch(`${API_URL}/Test/health`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            if (response.ok) {
+                window.location.href = getRole() === "manager"
+                    ? "/manager-dashboard.html"
+                    : "/guest-dashboard.html";
+            } else {
+                localStorage.removeItem('probook_token');
+                localStorage.removeItem('probook_user');
+            }
+        } catch (error) {
+            // Servidor no disponible, limpiar sesion
+            localStorage.removeItem('probook_token');
+            localStorage.removeItem('probook_user');
+        }
     }
+    checkSession();
 
     document.addEventListener("keydown", function(e) {
         if (e.key === "Enter") handleLogin();

@@ -19,10 +19,8 @@ public class RoomService : IRoomService
         _firebaseService = firebaseService;
         _logger = logger;
     }
-
-    // --------------------------------------------------------
+    
     // GET ALL ROOMS
-    // --------------------------------------------------------
 
     public async Task<List<RoomDto>> GetAllRooms(string? roomType = null)
     {
@@ -52,10 +50,8 @@ public class RoomService : IRoomService
             throw;
         }
     }
-
-    // --------------------------------------------------------
+    
     // GET ROOM BY ID
-    // --------------------------------------------------------
 
     public async Task<RoomDto?> GetRoomById(string roomId)
     {
@@ -79,10 +75,8 @@ public class RoomService : IRoomService
             throw;
         }
     }
-
-    // --------------------------------------------------------
+    
     // CREATE ROOM
-    // --------------------------------------------------------
 
     public async Task<Room> CreateRoom(CreateRoomDto createRoomDto, string createdByName, string createdById)
     {
@@ -129,7 +123,7 @@ public class RoomService : IRoomService
                 CreatedById = createdById
             };
 
-            // SetAsync con el objeto directamente usando los atributos [FirestoreData]
+            // SetAsync con el objeto directamente usando los atributos (FSData)
             await roomsCollection.Document(newRoom.Id).SetAsync(newRoom);
 
             _logger.LogInformation($"Habitacion creada: {newRoom.RoomNumber} por {createdByName}");
@@ -146,10 +140,8 @@ public class RoomService : IRoomService
             throw;
         }
     }
-
-    // --------------------------------------------------------
+    
     // UPDATE ROOM
-    // --------------------------------------------------------
 
     public async Task<Room> UpdateRoom(string roomId, UpdateRoomDto updateRoomDto, string updatedByName)
     {
@@ -197,10 +189,8 @@ public class RoomService : IRoomService
             throw;
         }
     }
-
-    // --------------------------------------------------------
+    
     // DELETE ROOM
-    // --------------------------------------------------------
 
     public async Task DeleteRoom(string roomId)
     {
@@ -236,10 +226,8 @@ public class RoomService : IRoomService
             throw;
         }
     }
-
-    // --------------------------------------------------------
+    
     // SEARCH ROOMS
-    // --------------------------------------------------------
 
     public async Task<List<RoomDto>> SearchRooms(string searchTerm)
     {
@@ -264,10 +252,8 @@ public class RoomService : IRoomService
             throw;
         }
     }
-
-    // --------------------------------------------------------
+    
     // GET AVAILABLE ROOMS
-    // --------------------------------------------------------
 
     public async Task<List<RoomDto>> GetAvailableRooms(DateTime checkIn, DateTime checkOut)
     {

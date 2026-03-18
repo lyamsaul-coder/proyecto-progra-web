@@ -18,15 +18,18 @@ public class AuthService : IAuthService
     private readonly FirebaseService _firebaseService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
+    private readonly ServerInstanceService _serverInstance;
 
     public AuthService(
         FirebaseService firebaseService,
         IConfiguration configuration,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        ServerInstanceService serverInstance)
     {
         _firebaseService = firebaseService;
         _configuration = configuration;
         _logger = logger;
+        _serverInstance = serverInstance;
     }
 
     // --------------------------------------------------------
@@ -288,7 +291,11 @@ public class AuthService : IAuthService
                     new Claim("email", user.Email),
                     new Claim("name", user.Fullname),
                     // El claim "role" se usa en los controllers para validar permisos
-                    new Claim("role", user.Role)
+                    new Claim("role", user.Role),
+                    // sid = server instance id: se genera al arrancar el servidor.
+                    // Si el servidor se reinicia, este GUID cambia y el endpoint
+                    // /api/test/health devuelve 401, forzando cierre de sesion en el frontend.
+                    new Claim("sid", _serverInstance.InstanceId)
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(15),
                 Issuer = issuer,
