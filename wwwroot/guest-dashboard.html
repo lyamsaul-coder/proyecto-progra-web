@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProBook - Panel del Huesped</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .welcome-card {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            border-radius: var(--radius-lg);
+            padding: 2rem 2.5rem;
+            color: white;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-card::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 180px;
+            height: 180px;
+            background: rgba(212, 168, 83, 0.15);
+            border-radius: 50%;
+        }
+
+        .welcome-card::after {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            right: 100px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+
+        .welcome-title {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .welcome-subtitle {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.95rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .reservation-status-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem;
+        }
+
+        .reservation-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .reservation-detail-item {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+        }
+
+        .reservation-detail-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.35rem;
+        }
+
+        .reservation-detail-value {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .quick-action-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text);
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quick-action-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .quick-action-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .quick-action-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .quick-action-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <a href="/guest-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
+    <div id="nav-user" class="navbar-user"></div>
+</nav>
+
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Mi cuenta</div>
+            <a href="/guest-dashboard.html" class="sidebar-link active">🏠 Inicio</a>
+            <a href="/rooms-list.html" class="sidebar-link">🏨 Habitaciones</a>
+            <a href="/reservation.html" class="sidebar-link" id="sidebar-reserve">📅 Reservar</a>
+            <a href="/already-reserved.html" class="sidebar-link hidden" id="sidebar-my-reservation">📋 Mi reserva</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">Cuenta</div>
+            <button class="sidebar-link" onclick="logout()">🚪 Cerrar sesion</button>
+        </div>
+    </aside>
+
+    <!-- Contenido -->
+    <main class="main-content">
+
+        <!-- Bienvenida -->
+        <div class="welcome-card">
+            <h1 class="welcome-title">Bienvenido, <span id="user-name">...</span></h1>
+            <p class="welcome-subtitle">Gestiona tu reserva y explora las habitaciones disponibles</p>
+        </div>
+
+        <!-- Estado de reserva -->
+        <div id="reservation-section"></div>
+
+        <!-- Acciones rapidas -->
+        <div class="page-header mt-3">
+            <h2 class="page-title" style="font-size:1.2rem">Acciones rapidas</h2>
+        </div>
+        <div class="quick-actions" id="quick-actions">
+            <a href="/rooms-list.html" class="quick-action-card">
+                <span class="quick-action-icon">🔍</span>
+                <div class="quick-action-title">Ver habitaciones</div>
+                <div class="quick-action-desc">Explora las habitaciones disponibles</div>
+            </a>
+            <a href="/reservation.html" class="quick-action-card" id="action-reserve">
+                <span class="quick-action-icon">📅</span>
+                <div class="quick-action-title">Hacer una reserva</div>
+                <div class="quick-action-desc">Selecciona fechas y confirma</div>
+            </a>
+        </div>
+    </main>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+    requireAuth('guest');
+    renderNavbar('guest');
+
+    const user = getUser();
+    document.getElementById('user-name').textContent = user?.fullname || 'Huesped';
+
+    loadDashboard();
+
+    async function loadDashboard() {
+        try {
+            if (user?.hasReserved) {
+                // Tiene reserva: ocultar "Reservar", mostrar "Mi reserva"
+                const sidebarReserve = document.getElementById('sidebar-reserve');
+                const sidebarMyRes   = document.getElementById('sidebar-my-reservation');
+                if (sidebarReserve) sidebarReserve.classList.add('hidden');
+                if (sidebarMyRes)   sidebarMyRes.classList.remove('hidden');
+                await loadReservation();
+            } else {
+                renderNoReservation();
+            }
+        } catch (error) {
+            renderNoReservation();
+        }
+    }
+
+    async function loadReservation() {
+        try {
+            const reservation = await apiGet('/Reservations/my');
+            renderReservation(reservation);
+
+            // Ocultar opcion de reservar si ya reservo
+            document.getElementById('action-reserve').style.display = 'none';
+            document.getElementById('sidebar-reserve').style.display = 'none';
+
+        } catch {
+            renderNoReservation();
+        }
+    }
+
+    function renderReservation(r) {
+        document.getElementById('reservation-section').innerHTML = `
+                <div class="reservation-status-card">
+                    <div class="flex-between">
+                        <div>
+                            <h2 style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:0.2rem">
+                                Mi Reserva
+                            </h2>
+                            <p style="font-size:0.85rem;color:var(--text-muted)">
+                                Confirmada el ${r.timestamp}
+                            </p>
+                        </div>
+                        ${getStatusBadge(r.status)}
+                    </div>
+
+                    <div class="reservation-detail-grid">
+                        <div class="reservation-detail-item">
+                            <div class="reservation-detail-label">Habitacion</div>
+                            <div class="reservation-detail-value">Hab. ${r.roomNumber}</div>
+                            <div style="font-size:0.8rem;color:var(--text-muted)">${r.roomType}</div>
+                        </div>
+                        <div class="reservation-detail-item">
+                            <div class="reservation-detail-label">Check-in</div>
+                            <div class="reservation-detail-value">${formatDate(r.checkInDate)}</div>
+                        </div>
+                        <div class="reservation-detail-item">
+                            <div class="reservation-detail-label">Check-out</div>
+                            <div class="reservation-detail-value">${formatDate(r.checkOutDate)}</div>
+                        </div>
+                        <div class="reservation-detail-item">
+                            <div class="reservation-detail-label">Noches</div>
+                            <div class="reservation-detail-value">${r.nights}</div>
+                        </div>
+                        <div class="reservation-detail-item">
+                            <div class="reservation-detail-label">Total pagado</div>
+                            <div class="reservation-detail-value" style="color:var(--primary)">
+                                ${formatCurrency(r.totalCost)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-2" style="margin-bottom:0">
+                        Tu reserva es definitiva y no puede modificarse. Si necesitas ayuda contacta al gerente.
+                    </div>
+                </div>`;
+    }
+
+    function renderNoReservation() {
+        document.getElementById('reservation-section').innerHTML = `
+                <div class="reservation-status-card">
+                    <div class="empty-state" style="padding:1.5rem">
+                        <div class="empty-state-icon">📅</div>
+                        <div class="empty-state-title">Aun no tienes reserva</div>
+                        <div class="empty-state-desc">Explora las habitaciones disponibles y realiza tu reserva</div>
+                        <a href="/rooms-list.html" class="btn btn-primary mt-2">Ver habitaciones</a>
+                    </div>
+                </div>`;
+    }
+</script>
+</body>
+</html>

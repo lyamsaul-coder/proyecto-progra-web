@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProBook - Panel del Gerente</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chart-card-full {
+            grid-column: 1 / -1;
+        }
+
+        .chart-title {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        .period-form {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .period-form .form-group {
+            margin-bottom: 0;
+            flex: 1;
+            min-width: 160px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <a href="/manager-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
+    <div id="nav-user" class="navbar-user"></div>
+</nav>
+
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Principal</div>
+            <a href="/manager-dashboard.html" class="sidebar-link active">
+                📊 Dashboard
+            </a>
+            <a href="/room-management.html" class="sidebar-link">
+                🏨 Habitaciones
+            </a>
+            <a href="/guest-list.html" class="sidebar-link">
+                👥 Huespedes
+            </a>
+            <a href="/reports.html" class="sidebar-link">
+                📈 Reportes
+            </a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">Cuenta</div>
+            <button class="sidebar-link" onclick="logout()">
+                🚪 Cerrar sesion
+            </button>
+        </div>
+    </aside>
+
+    <!-- Contenido -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">Resumen general del sistema de reservas</p>
+        </div>
+
+        <!-- Filtro de periodo -->
+        <div class="period-form">
+            <div class="form-group">
+                <label class="form-label">Fecha inicio</label>
+                <input type="date" id="period-start" class="form-control">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Fecha fin</label>
+                <input type="date" id="period-end" class="form-control">
+            </div>
+            <button class="btn btn-primary" onclick="loadStats()">
+                Aplicar filtro
+            </button>
+            <button class="btn btn-outline" onclick="clearFilter()">
+                Ver ultimo mes
+            </button>
+        </div>
+
+        <!-- Stats cards -->
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Habitaciones</div>
+                <div class="stat-value" id="stat-rooms">--</div>
+                <div class="stat-desc">Registradas en el sistema</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Noches Reservadas</div>
+                <div class="stat-value" id="stat-nights">--</div>
+                <div class="stat-desc">En el periodo seleccionado</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Ocupacion</div>
+                <div class="stat-value" id="stat-occupancy">--</div>
+                <div class="stat-desc">Porcentaje del periodo</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Ingresos</div>
+                <div class="stat-value" id="stat-revenue">--</div>
+                <div class="stat-desc">Total generado</div>
+            </div>
+        </div>
+
+        <!-- Graficos -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">Reservas por tipo de habitacion</div>
+                <div class="chart-container">
+                    <canvas id="chart-bars"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Distribucion de ingresos</div>
+                <div class="chart-container">
+                    <canvas id="chart-pie"></canvas>
+                </div>
+            </div>
+            <div class="chart-card chart-card-full">
+                <div class="chart-title">Tendencia de ocupacion temporal</div>
+                <div class="chart-container">
+                    <canvas id="chart-line"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de resultados -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Tabla de resultados</h2>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Tipo de habitacion</th>
+                        <th>Reservas</th>
+                        <th>Ingresos</th>
+                        <th>Participacion</th>
+                    </tr>
+                    </thead>
+                    <tbody id="results-table">
+                    <tr><td colspan="4" class="text-center text-muted" style="padding:2rem">Cargando datos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+    requireAuth('manager');
+    renderNavbar('manager');
+
+    let barChart, pieChart, lineChart;
+
+    // Cargar estadisticas al iniciar
+    loadStats();
+
+    function clearFilter() {
+        document.getElementById('period-start').value = '';
+        document.getElementById('period-end').value = '';
+        loadStats();
+    }
+
+    async function loadStats() {
+        try {
+            let url = '/Reports/statistics';
+            const start = document.getElementById('period-start').value;
+            const end = document.getElementById('period-end').value;
+
+            const params = [];
+            if (start) params.push(`periodStart=${inputDateToApi(start)}`);
+            if (end) params.push(`periodEnd=${inputDateToApi(end)}`);
+            if (params.length > 0) url += '?' + params.join('&');
+
+            const data = await apiGet(url);
+            renderStats(data);
+            renderCharts(data);
+            renderTable(data);
+
+        } catch (error) {
+            console.error('Error cargando estadisticas:', error);
+        }
+    }
+
+    function renderStats(data) {
+        document.getElementById('stat-rooms').textContent = data.totalRooms;
+        document.getElementById('stat-nights').textContent = data.totalNightsReserved;
+        document.getElementById('stat-occupancy').textContent = data.occupancyPercentage + '%';
+        document.getElementById('stat-revenue').textContent = formatCurrency(data.totalRevenue);
+    }
+
+    function renderCharts(data) {
+        const labels = Object.keys(data.reservationsByRoomType);
+        const reservations = Object.values(data.reservationsByRoomType);
+        const revenues = Object.values(data.revenueByRoomType);
+        const trendLabels = Object.keys(data.occupancyTrend);
+        const trendValues = Object.values(data.occupancyTrend);
+
+        const colors = ['#2C5F8A', '#D4A853', '#2E7D5E', '#C0392B', '#8E44AD', '#E67E22'];
+
+        // Grafico de barras
+        if (barChart) barChart.destroy();
+        barChart = new Chart(document.getElementById('chart-bars'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Reservas',
+                    data: reservations,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Grafico circular
+        if (pieChart) pieChart.destroy();
+        pieChart = new Chart(document.getElementById('chart-pie'), {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data: revenues,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: 'white'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 15, font: { size: 12 } }
+                    }
+                }
+            }
+        });
+
+        // Grafico de tendencia
+        if (lineChart) lineChart.destroy();
+        lineChart = new Chart(document.getElementById('chart-line'), {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [{
+                    label: 'Reservas por dia',
+                    data: trendValues,
+                    borderColor: '#2C5F8A',
+                    backgroundColor: 'rgba(44, 95, 138, 0.08)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#2C5F8A',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('results-table');
+        const types = Object.keys(data.reservationsByRoomType);
+        const totalRevenue = data.totalRevenue;
+
+        if (types.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted" style="padding:2rem">
+                    No hay datos en el periodo seleccionado</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = types.map(type => {
+            const reservations = data.reservationsByRoomType[type];
+            const revenue = data.revenueByRoomType[type];
+            const participation = totalRevenue > 0
+                ? ((revenue / totalRevenue) * 100).toFixed(1)
+                : 0;
+
+            return `<tr>
+                    <td><strong>${type}</strong></td>
+                    <td>${reservations}</td>
+                    <td>${formatCurrency(revenue)}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:0.5rem">
+                            <div style="flex:1;height:6px;background:var(--border);border-radius:3px">
+                                <div style="width:${participation}%;height:100%;background:var(--primary);border-radius:3px"></div>
+                            </div>
+                            <span style="font-size:0.8rem;color:var(--text-muted)">${participation}%</span>
+                        </div>
+                    </td>
+                </tr>`;
+        }).join('');
+    }
+</script>
+</body>
+</html>

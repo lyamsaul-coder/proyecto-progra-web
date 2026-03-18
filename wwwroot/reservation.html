@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProBook - Reservar Habitacion</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .reservation-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .summary-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 80px;
+        }
+
+        .summary-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .summary-room {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.25rem;
+            color: white;
+        }
+
+        .summary-room-number {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .summary-room-type {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.85rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .summary-row:last-of-type { border-bottom: none; }
+
+        .summary-row-label { color: var(--text-muted); }
+        .summary-row-value { font-weight: 600; color: var(--text); }
+
+        .summary-total {
+            background: rgba(44, 95, 138, 0.06);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .summary-total-label {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .summary-total-value {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .warning-card {
+            background: rgba(230, 126, 34, 0.06);
+            border: 1px solid rgba(230, 126, 34, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 0.85rem 1rem;
+            font-size: 0.82rem;
+            color: var(--warning);
+            margin-top: 1rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .reservation-layout { grid-template-columns: 1fr; }
+            .summary-card { position: static; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <a href="/guest-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
+    <div id="nav-user" class="navbar-user"></div>
+</nav>
+
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Mi cuenta</div>
+            <a href="/guest-dashboard.html" class="sidebar-link">🏠 Inicio</a>
+            <a href="/rooms-list.html" class="sidebar-link">🏨 Habitaciones</a>
+            <a href="/reservation.html" class="sidebar-link active">📅 Reservar</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">Cuenta</div>
+            <button class="sidebar-link" onclick="logout()">🚪 Cerrar sesion</button>
+        </div>
+    </aside>
+
+    <!-- Contenido -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Realizar reserva</h1>
+            <p class="page-subtitle">Completa los datos para confirmar tu reserva</p>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <div class="reservation-layout">
+            <!-- Formulario -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Datos de la reserva</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Numero de habitacion *</label>
+                        <input type="text" id="room-number" class="form-control"
+                               placeholder="Ej: 504"
+                               onblur="updateSummary()"
+                               onchange="updateSummary()">
+                        <span class="form-hint">Ingresa el numero de la habitacion que deseas reservar</span>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Fecha de entrada *</label>
+                            <input type="date" id="check-in" class="form-control"
+                                   onchange="updateSummary()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Fecha de salida *</label>
+                            <input type="date" id="check-out" class="form-control"
+                                   onchange="updateSummary()">
+                        </div>
+                    </div>
+
+                    <div class="warning-card">
+                        ⚠️ <strong>Importante:</strong> Solo puedes realizar <strong>una reserva</strong>.
+                        Una vez confirmada no puede modificarse ni cancelarse.
+                        Verifica bien los datos antes de confirmar.
+                    </div>
+
+                    <div style="margin-top:1.5rem">
+                        <button id="btn-reserve" class="btn btn-primary btn-block btn-lg"
+                                onclick="handleReservation()">
+                            Confirmar reserva
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen -->
+            <div class="summary-card">
+                <h3 class="summary-title">Resumen de tu reserva</h3>
+
+                <div id="summary-room" class="summary-room">
+                    <div class="summary-room-number" id="sum-room-number">---</div>
+                    <div class="summary-room-type" id="sum-room-type">Ingresa el numero de habitacion</div>
+                </div>
+
+                <div class="summary-row">
+                    <span class="summary-row-label">Check-in</span>
+                    <span class="summary-row-value" id="sum-checkin">--</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-row-label">Check-out</span>
+                    <span class="summary-row-value" id="sum-checkout">--</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-row-label">Noches</span>
+                    <span class="summary-row-value" id="sum-nights">--</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-row-label">Tarifa base</span>
+                    <span class="summary-row-value" id="sum-base">--</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-row-label">Impuesto (15%)</span>
+                    <span class="summary-row-value" id="sum-tax">--</span>
+                </div>
+
+                <div class="summary-total">
+                    <span class="summary-total-label">Total</span>
+                    <span class="summary-total-value" id="sum-total">--</span>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+    requireAuth('guest');
+    renderNavbar('guest');
+
+    // Si ya reservo, redirigir a already-reserved
+    const user = getUser();
+    if (user?.hasReserved) {
+        window.location.href = '/already-reserved.html';
+    }
+
+    // Leer parametros de la URL si vienen de rooms-list
+    const params = new URLSearchParams(window.location.search);
+    const roomFromUrl = params.get('roomNumber');
+    const checkInFromUrl = params.get('checkIn');
+    const checkOutFromUrl = params.get('checkOut');
+
+    if (roomFromUrl) document.getElementById('room-number').value = roomFromUrl;
+    if (checkInFromUrl) document.getElementById('check-in').value = apiDateToInput(checkInFromUrl);
+    if (checkOutFromUrl) document.getElementById('check-out').value = apiDateToInput(checkOutFromUrl);
+
+    // Fecha minima hoy
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('check-in').min = today;
+    document.getElementById('check-out').min = today;
+    document.getElementById('check-in').addEventListener('change', function() {
+        document.getElementById('check-out').min = this.value;
+    });
+
+    // Actualizar resumen al cargar si vienen datos de URL
+    if (roomFromUrl || checkInFromUrl) updateSummary();
+
+    // Guardar tarifa base de la habitacion consultada
+    let currentBaseRate = null;
+
+    async function updateSummary() {
+        const roomNumber = document.getElementById('room-number').value.trim();
+        const checkIn = document.getElementById('check-in').value;
+        const checkOut = document.getElementById('check-out').value;
+
+        document.getElementById('sum-room-number').textContent =
+            roomNumber ? `Hab. ${roomNumber}` : '---';
+
+        // Consultar tarifa de la habitacion si tiene numero
+        if (roomNumber && roomNumber.length >= 1) {
+            try {
+                const room = await apiGet(`/Rooms/${roomNumber}`);
+                currentBaseRate = room.baseRate;
+                document.getElementById('sum-room-type').textContent = room.roomType;
+            } catch {
+                currentBaseRate = null;
+                document.getElementById('sum-room-type').textContent = 'Habitacion no encontrada';
+            }
+        } else {
+            currentBaseRate = null;
+            document.getElementById('sum-room-type').textContent = 'Ingresa el numero de habitacion';
+        }
+
+        if (checkIn && checkOut && checkIn < checkOut) {
+            const nights = Math.round(
+                (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)
+            );
+            document.getElementById('sum-checkin').textContent = formatDate(inputDateToApi(checkIn));
+            document.getElementById('sum-checkout').textContent = formatDate(inputDateToApi(checkOut));
+            document.getElementById('sum-nights').textContent = `${nights} noche${nights !== 1 ? 's' : ''}`;
+
+            // Calcular costos si tenemos la tarifa
+            if (currentBaseRate && nights > 0) {
+                const base = currentBaseRate * nights;
+                const tax = base * 0.15;
+                const total = base + tax;
+                document.getElementById('sum-base').textContent = formatCurrency(base);
+                document.getElementById('sum-tax').textContent = formatCurrency(tax);
+                document.getElementById('sum-total').textContent = formatCurrency(total);
+            } else {
+                document.getElementById('sum-base').textContent = '--';
+                document.getElementById('sum-tax').textContent = '--';
+                document.getElementById('sum-total').textContent = '--';
+            }
+        } else {
+            document.getElementById('sum-checkin').textContent = '--';
+            document.getElementById('sum-checkout').textContent = '--';
+            document.getElementById('sum-nights').textContent = '--';
+            document.getElementById('sum-base').textContent = '--';
+            document.getElementById('sum-tax').textContent = '--';
+            document.getElementById('sum-total').textContent = '--';
+        }
+    }
+
+    async function handleReservation() {
+        const roomNumber = document.getElementById('room-number').value.trim();
+        const checkIn = document.getElementById('check-in').value;
+        const checkOut = document.getElementById('check-out').value;
+        const btn = document.getElementById('btn-reserve');
+
+        clearAlert('alert-container');
+
+        if (!roomNumber || !checkIn || !checkOut) {
+            showAlert('alert-container', 'Por favor completa todos los campos.');
+            return;
+        }
+
+        if (checkIn >= checkOut) {
+            showAlert('alert-container', 'La fecha de salida debe ser posterior a la entrada.');
+            return;
+        }
+
+        setLoading(btn, true);
+
+        try {
+            const response = await apiPost('/Reservations', {
+                roomNumber,
+                checkInDate: inputDateToApi(checkIn),
+                checkOutDate: inputDateToApi(checkOut)
+            });
+
+            // Actualizar datos del usuario en localStorage
+            const user = getUser();
+            user.hasReserved = true;
+            user.reservedRoomId = response.reservation.roomId;
+            user.reservedDates = `${response.reservation.checkInDate} - ${response.reservation.checkOutDate}`;
+            localStorage.setItem('probook_user', JSON.stringify(user));
+
+            // Redirigir a confirmacion con datos
+            localStorage.setItem('last_reservation', JSON.stringify(response));
+            window.location.href = '/reservation-confirmation.html';
+
+        } catch (error) {
+            if (error.message.includes('Ya realizaste')) {
+                window.location.href = '/already-reserved.html';
+            } else {
+                showAlert('alert-container', error.message);
+            }
+        } finally {
+            setLoading(btn, false);
+        }
+    }
+</script>
+</body>
+</html>

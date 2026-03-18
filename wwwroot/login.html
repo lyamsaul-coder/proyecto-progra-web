@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProBook - Iniciar Sesion</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            padding: 1rem;
+        }
+
+        .auth-container {
+            display: flex;
+            width: 100%;
+            max-width: 900px;
+            min-height: 560px;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .auth-panel {
+            width: 45%;
+            background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 100%);
+            padding: 2.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-panel::before {
+            content: "";
+            position: absolute;
+            top: -60px; right: -60px;
+            width: 220px; height: 220px;
+            background: rgba(212,168,83,0.12);
+            border-radius: 50%;
+        }
+
+        .auth-panel::after {
+            content: "";
+            position: absolute;
+            bottom: -40px; left: -40px;
+            width: 180px; height: 180px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+
+        .auth-panel-brand {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-panel-brand span { color: var(--accent); }
+
+        .auth-panel-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        #monkey-container {
+            width: 200px;
+            height: 200px;
+            cursor: default;
+            background: transparent;
+        }
+
+        #monkey-container svg > g:first-child { display: none !important; }
+        #monkey-container svg { background: transparent !important; }
+
+        .auth-panel-title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+        }
+
+        .auth-panel-desc {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .auth-panel-link {
+            color: white;
+            font-size: 0.875rem;
+            text-decoration: none;
+            font-weight: 500;
+            opacity: 0.85;
+            transition: var(--transition);
+        }
+
+        .auth-panel-link:hover { opacity: 1; }
+
+        .auth-form-section {
+            flex: 1;
+            padding: 3rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-form-title {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.35rem;
+        }
+
+        .auth-form-subtitle {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 2rem;
+        }
+
+        .auth-form-subtitle a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .auth-form-subtitle a:hover { text-decoration: underline; }
+
+        .forgot-link {
+            font-size: 0.8rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            float: right;
+            margin-top: -1rem;
+            margin-bottom: 1rem;
+        }
+
+        .forgot-link:hover { text-decoration: underline; }
+
+        .password-wrapper { position: relative; }
+        .password-wrapper .form-control { padding-right: 2.8rem; }
+
+        .btn-toggle-password {
+            position: absolute;
+            right: 0.75rem; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none;
+            cursor: pointer; color: var(--text-muted);
+            font-size: 1.1rem; padding: 0.2rem;
+            transition: color 0.2s; line-height: 1;
+        }
+
+        .btn-toggle-password:hover { color: var(--primary); }
+
+        @media (max-width: 640px) {
+            .auth-container {
+                flex-direction: column;
+                min-height: auto;
+                max-width: 100%;
+                border-radius: var(--radius);
+                margin: 1rem;
+                width: calc(100% - 2rem);
+            }
+            .auth-panel {
+                width: 100%;
+                padding: 1.5rem;
+                flex-direction: row;
+                align-items: center;
+                gap: 1rem;
+                min-height: auto;
+            }
+            .auth-panel-content {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.75rem;
+            }
+            #monkey-container {
+                width: 90px !important;
+                height: 90px !important;
+                flex-shrink: 0;
+            }
+            .auth-panel-title { font-size: 1rem; }
+            .auth-panel-desc { display: none; }
+            .auth-panel-link { font-size: 0.8rem; }
+            .auth-form-section { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <div class="auth-panel">
+        <a href="/index.html" class="auth-panel-brand">Pro<span>Book</span></a>
+        <div class="auth-panel-content">
+            <div id="monkey-container"></div>
+            <h2 class="auth-panel-title">Bienvenido de nuevo</h2>
+            <p class="auth-panel-desc">Inicia sesion para gestionar tus reservas.</p>
+            <a href="/register.html" class="auth-panel-link">¿No tienes cuenta? Registrate →</a>
+        </div>
+    </div>
+
+    <div class="auth-form-section">
+        <h1 class="auth-form-title">Iniciar Sesion</h1>
+        <p class="auth-form-subtitle">
+            ¿No tienes cuenta? <a href="/register.html">Registrate gratis</a>
+        </p>
+
+        <div id="alert-container"></div>
+
+        <div class="form-group">
+            <label class="form-label" for="email">Correo electronico</label>
+            <input type="email" id="email" class="form-control"
+                   placeholder="tu@correo.com" autocomplete="email"
+                   onfocus="monkeyLook()">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="password">Contrasena</label>
+            <div class="password-wrapper">
+                <input type="password" id="password" class="form-control"
+                       placeholder="••••••••" autocomplete="current-password"
+                       onfocus="monkeyCoverIfHidden()">
+                <button type="button" class="btn-toggle-password" id="btn-toggle"
+                        onclick="togglePassword()" title="Ver contrasena">👁</button>
+            </div>
+        </div>
+
+        <a href="/forgot-password.html" class="forgot-link">Olvide mi contrasena</a>
+
+        <button id="btn-login" class="btn btn-primary btn-block btn-lg" onclick="handleLogin()">
+            Iniciar Sesion
+        </button>
+
+        <p class="text-center mt-2" style="font-size:0.8rem; color: var(--text-muted);">
+            Al iniciar sesion aceptas los terminos del servicio
+        </p>
+    </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+    // Redirigir si ya esta logueado
+    if (isLoggedIn()) {
+        window.location.href = getRole() === "manager"
+            ? "/manager-dashboard.html"
+            : "/guest-dashboard.html";
+    }
+
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") handleLogin();
+    });
+
+    // ---- LOTTIE MONKEY ----
+    const anim = lottie.loadAnimation({
+        container: document.getElementById("monkey-container"),
+        renderer: "svg",
+        loop: false,
+        autoplay: false,
+        path: "/js/monkey.json"
+    });
+
+    const COVER_FRAME = 45;
+    const IDLE_FRAME  = 0;
+    const LOOK_FRAME  = 15;
+
+    anim.addEventListener("DOMLoaded", function() {
+        anim.goToAndStop(IDLE_FRAME, true);
+    });
+
+    anim.addEventListener("complete", function() {
+        anim.goToAndStop(anim.currentFrame, true);
+    });
+
+    function monkeyLook() {
+        anim.goToAndStop(LOOK_FRAME, true);
+    }
+
+    function monkeyCoverIfHidden() {
+        const input = document.getElementById("password");
+        if (input.type === "password") {
+            anim.goToAndStop(COVER_FRAME, true);
+        }
+    }
+
+    function togglePassword() {
+        const input = document.getElementById("password");
+        input.type = input.type === "text" ? "password" : "text";
+        if (input.type === "password") {
+            anim.goToAndStop(COVER_FRAME, true);
+        } else {
+            anim.goToAndStop(IDLE_FRAME, true);
+        }
+    }
+
+    // Volver al idle al hacer clic fuera
+    document.addEventListener("click", function(e) {
+        const ids = ["email", "password", "btn-toggle"];
+        if (!ids.includes(e.target.id)) {
+            anim.goToAndStop(IDLE_FRAME, true);
+        }
+    });
+
+    // Restaurar estado al volver a la pestana
+    document.addEventListener("visibilitychange", function() {
+        if (!document.hidden) {
+            const pwdInput = document.getElementById("password");
+            if (pwdInput.type === "text") {
+                anim.goToAndStop(IDLE_FRAME, true);
+            } else {
+                anim.goToAndStop(COVER_FRAME, true);
+            }
+        }
+    });
+
+    // ---- LOGIN ----
+    async function handleLogin() {
+        const email    = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const btn      = document.getElementById("btn-login");
+
+        clearAlert("alert-container");
+
+        if (!email || !password) {
+            showAlert("alert-container", "Por favor completa todos los campos.");
+            return;
+        }
+
+        setLoading(btn, true);
+
+        try {
+            const data = await apiPost("/Auth/login", { email, password }, false);
+            saveSession(data.token, data.user);
+            window.location.href = data.user.role === "manager"
+                ? "/manager-dashboard.html"
+                : "/guest-dashboard.html";
+        } catch (error) {
+            showAlert("alert-container", error.message || "Error al iniciar sesion.");
+        } finally {
+            setLoading(btn, false);
+        }
+    }
+</script>
+</body>
+</html>

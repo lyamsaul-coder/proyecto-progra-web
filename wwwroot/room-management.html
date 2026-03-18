@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProBook - Gestion de Habitaciones</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .room-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .room-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .room-card-header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .room-number {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .room-type-badge {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.65rem;
+            border-radius: 20px;
+        }
+
+        .room-card-body {
+            padding: 1.25rem 1.5rem;
+        }
+
+        .room-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .room-info-row:last-of-type { border-bottom: none; }
+
+        .room-info-label { color: var(--text-muted); }
+        .room-info-value { font-weight: 600; color: var(--text); }
+
+        .room-amenities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin: 0.75rem 0;
+        }
+
+        .amenity-tag {
+            background: rgba(44, 95, 138, 0.08);
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+        }
+
+        .room-card-img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .room-card-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <a href="/manager-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
+    <div id="nav-user" class="navbar-user"></div>
+</nav>
+
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Principal</div>
+            <a href="/manager-dashboard.html" class="sidebar-link">📊 Dashboard</a>
+            <a href="/room-management.html" class="sidebar-link active">🏨 Habitaciones</a>
+            <a href="/guest-list.html" class="sidebar-link">👥 Huespedes</a>
+            <a href="/reports.html" class="sidebar-link">📈 Reportes</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">Cuenta</div>
+            <button class="sidebar-link" onclick="logout()">🚪 Cerrar sesion</button>
+        </div>
+    </aside>
+
+    <!-- Contenido -->
+    <main class="main-content">
+        <div class="page-header flex-between">
+            <div>
+                <h1 class="page-title">Habitaciones</h1>
+                <p class="page-subtitle">Gestiona las habitaciones del hotel</p>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('modal-room')">
+                + Nueva habitacion
+            </button>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Busqueda -->
+        <div class="card mb-3">
+            <div style="display:flex;gap:1rem;align-items:center">
+                <input type="text" id="search-input" class="form-control"
+                       placeholder="Buscar por numero o tipo..."
+                       oninput="filterRooms()"
+                       style="max-width:320px">
+                <span id="rooms-count" class="text-muted text-sm"></span>
+            </div>
+        </div>
+
+        <!-- Grid de habitaciones -->
+        <div id="rooms-grid" class="rooms-grid">
+            <div class="empty-state">
+                <div class="spinner spinner-primary"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal crear/editar habitacion -->
+<div id="modal-room" class="modal-overlay" onclick="handleOverlayClick(event, 'modal-room')">
+    <div class="modal" style="max-width:520px">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modal-room-title">Nueva habitacion</h3>
+            <button class="modal-close" onclick="closeModal('modal-room')">×</button>
+        </div>
+
+        <div id="modal-alert"></div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label class="form-label">Numero de habitacion *</label>
+                <input type="text" id="room-number" class="form-control" placeholder="101">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Tipo *</label>
+                <select id="room-type" class="form-control">
+                    <option value="">Seleccionar...</option>
+                    <option>Simple</option>
+                    <option>Doble</option>
+                    <option>Suite</option>
+                    <option>Suite VIP</option>
+                    <option>Deluxe</option>
+                    <option>Familiar</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label class="form-label">Capacidad (personas) *</label>
+                <input type="number" id="room-capacity" class="form-control" min="1" max="10" placeholder="2">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Tarifa por noche (L.) *</label>
+                <input type="number" id="room-rate" class="form-control" min="1" placeholder="150">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Descripcion</label>
+            <input type="text" id="room-description" class="form-control" placeholder="Descripcion de la habitacion">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Amenidades (separadas por coma)</label>
+            <input type="text" id="room-amenities" class="form-control" placeholder="WiFi, TV, AC, Jacuzzi">
+            <span class="form-hint">Ejemplo: WiFi, TV, AC, Terraza</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">URL de foto</label>
+            <input type="text" id="room-photo" class="form-control" placeholder="https://...">
+        </div>
+
+        <input type="hidden" id="room-editing-number">
+
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('modal-room')">Cancelar</button>
+            <button id="btn-save-room" class="btn btn-primary" onclick="saveRoom()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal confirmar eliminacion -->
+<div id="modal-delete" class="modal-overlay" onclick="handleOverlayClick(event, 'modal-delete')">
+    <div class="modal" style="max-width:400px">
+        <div class="modal-header">
+            <h3 class="modal-title">Eliminar habitacion</h3>
+            <button class="modal-close" onclick="closeModal('modal-delete')">×</button>
+        </div>
+        <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:0.5rem">
+            ¿Estas seguro de eliminar la habitacion <strong id="delete-room-number"></strong>?
+        </p>
+        <p style="color:var(--danger);font-size:0.82rem">
+            Esta accion no se puede deshacer. Solo se puede eliminar si no tiene reservas.
+        </p>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('modal-delete')">Cancelar</button>
+            <button id="btn-confirm-delete" class="btn btn-danger" onclick="confirmDelete()">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+    requireAuth('manager');
+    renderNavbar('manager');
+
+    let allRooms = [];
+    let deletingRoomNumber = '';
+
+    loadRooms();
+
+    async function loadRooms() {
+        try {
+            allRooms = await apiGet('/Rooms');
+            renderRooms(allRooms);
+        } catch (error) {
+            document.getElementById('rooms-grid').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <div class="empty-state-title">Error al cargar habitaciones</div>
+                        <div class="empty-state-desc">${error.message}</div>
+                    </div>`;
+        }
+    }
+
+    function getImageByType(roomType, photoUrl) {
+        // Si tiene foto propia la usamos, sino usamos la imagen por tipo
+        if (photoUrl && photoUrl !== 'string' && photoUrl.startsWith('http')) return photoUrl;
+        const map = {
+            'Simple':    'https://i.imgur.com/CmaHmWN.png',
+            'Doble':     'https://i.imgur.com/LVbGuzF.png',
+            'Suite':     'https://i.imgur.com/C3RYOAp.png',
+            'Suite VIP': 'https://i.imgur.com/tIaJ89i.png',
+            'Deluxe':    'https://i.imgur.com/AvNZrR8.png',
+            'Familiar':  'https://i.imgur.com/AEAor06.png'
+        };
+        return map[roomType] || 'https://i.imgur.com/CmaHmWN.png';
+    }
+
+    function renderRooms(rooms) {
+        const grid = document.getElementById('rooms-grid');
+        document.getElementById('rooms-count').textContent =
+            `${rooms.length} habitacion${rooms.length !== 1 ? 'es' : ''}`;
+
+        if (rooms.length === 0) {
+            grid.innerHTML = `
+                    <div class="empty-state" style="grid-column:1/-1">
+                        <div class="empty-state-icon">🏨</div>
+                        <div class="empty-state-title">No hay habitaciones</div>
+                        <div class="empty-state-desc">Crea la primera habitacion con el boton de arriba</div>
+                    </div>`;
+            return;
+        }
+
+        grid.innerHTML = rooms.map(room => {
+            const amenities = Array.isArray(room.amenities)
+                ? room.amenities.flatMap(a => a.split(',').map(x => x.trim())).filter(Boolean)
+                : [];
+
+            return `
+                <div class="room-card">
+                    <img src="${getImageByType(room.roomType, room.photoUrl)}"
+                         alt="Habitacion ${room.roomNumber}"
+                         class="room-card-img"
+                         onerror="this.src='https://i.imgur.com/CmaHmWN.png'">
+                    <div class="room-card-header">
+                        <span class="room-number">Hab. ${room.roomNumber}</span>
+                        <span class="room-type-badge">${room.roomType}</span>
+                    </div>
+                    <div class="room-card-body">
+                        <div class="room-info-row">
+                            <span class="room-info-label">Capacidad</span>
+                            <span class="room-info-value">${room.capacity} personas</span>
+                        </div>
+                        <div class="room-info-row">
+                            <span class="room-info-label">Tarifa base</span>
+                            <span class="room-info-value">${formatCurrency(room.baseRate)} / noche</span>
+                        </div>
+                        <div class="room-info-row">
+                            <span class="room-info-label">Reservas</span>
+                            <span class="room-info-value">${room.reservationCount}</span>
+                        </div>
+                        ${room.description && room.description !== 'string' ? `
+                        <div class="room-info-row">
+                            <span class="room-info-label">Descripcion</span>
+                            <span class="room-info-value" style="text-align:right;max-width:200px">${room.description}</span>
+                        </div>` : ''}
+                        ${amenities.length > 0 ? `
+                        <div class="room-amenities">
+                            ${amenities.map(a => `<span class="amenity-tag">${a}</span>`).join('')}
+                        </div>` : ''}
+                    </div>
+                    <div class="room-card-footer">
+                        <button class="btn btn-outline btn-sm" onclick="editRoom('${room.roomNumber}')">
+                            Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteRoom('${room.roomNumber}')">
+                            Eliminar
+                        </button>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    function filterRooms() {
+        const term = document.getElementById('search-input').value.toLowerCase();
+        const filtered = allRooms.filter(r =>
+            r.roomNumber.toLowerCase().includes(term) ||
+            r.roomType.toLowerCase().includes(term)
+        );
+        renderRooms(filtered);
+    }
+
+    function editRoom(roomNumber) {
+        const room = allRooms.find(r => r.roomNumber === roomNumber);
+        if (!room) return;
+
+        document.getElementById('modal-room-title').textContent = `Editar habitacion ${roomNumber}`;
+        document.getElementById('room-number').value = room.roomNumber;
+        document.getElementById('room-number').disabled = true;
+        document.getElementById('room-type').value = room.roomType;
+        document.getElementById('room-capacity').value = room.capacity;
+        document.getElementById('room-rate').value = room.baseRate;
+        document.getElementById('room-description').value = room.description || '';
+        document.getElementById('room-photo').value = room.photoUrl || '';
+        document.getElementById('room-editing-number').value = roomNumber;
+
+        const amenities = Array.isArray(room.amenities)
+            ? room.amenities.join(', ')
+            : '';
+        document.getElementById('room-amenities').value = amenities;
+
+        clearAlert('modal-alert');
+        openModal('modal-room');
+    }
+
+    function deleteRoom(roomNumber) {
+        deletingRoomNumber = roomNumber;
+        document.getElementById('delete-room-number').textContent = roomNumber;
+        openModal('modal-delete');
+    }
+
+    async function confirmDelete() {
+        const btn = document.getElementById('btn-confirm-delete');
+        setLoading(btn, true);
+
+        try {
+            await apiDelete(`/Rooms/${deletingRoomNumber}`);
+            closeModal('modal-delete');
+            showAlert('alert-container', `Habitacion ${deletingRoomNumber} eliminada correctamente.`, 'success');
+            await loadRooms();
+        } catch (error) {
+            closeModal('modal-delete');
+            showAlert('alert-container', error.message, 'danger');
+        } finally {
+            setLoading(btn, false);
+        }
+    }
+
+    async function saveRoom() {
+        const editingNumber = document.getElementById('room-editing-number').value;
+        const isEditing = !!editingNumber;
+
+        const roomNumber = document.getElementById('room-number').value.trim();
+        const roomType = document.getElementById('room-type').value;
+        const capacity = parseInt(document.getElementById('room-capacity').value);
+        const baseRate = parseFloat(document.getElementById('room-rate').value);
+        const description = document.getElementById('room-description').value.trim();
+        const photoUrl = document.getElementById('room-photo').value.trim();
+        const amenitiesRaw = document.getElementById('room-amenities').value.trim();
+        const amenities = amenitiesRaw ? amenitiesRaw.split(',').map(a => a.trim()).filter(Boolean) : [];
+
+        clearAlert('modal-alert');
+
+        if (!roomNumber || !roomType || !capacity || !baseRate) {
+            showAlert('modal-alert', 'Completa los campos obligatorios (*).');
+            return;
+        }
+
+        const btn = document.getElementById('btn-save-room');
+        setLoading(btn, true);
+
+        try {
+            if (isEditing) {
+                await apiPut(`/Rooms/${editingNumber}`, {
+                    roomType, capacity, baseRate, description, photoUrl, amenities
+                });
+                showAlert('alert-container', `Habitacion ${editingNumber} actualizada correctamente.`, 'success');
+            } else {
+                await apiPost('/Rooms', {
+                    roomNumber, roomType, capacity, baseRate, description, photoUrl, amenities
+                });
+                showAlert('alert-container', `Habitacion ${roomNumber} creada correctamente.`, 'success');
+            }
+
+            closeModal('modal-room');
+            resetRoomForm();
+            await loadRooms();
+
+        } catch (error) {
+            showAlert('modal-alert', error.message);
+        } finally {
+            setLoading(btn, false);
+        }
+    }
+
+    function resetRoomForm() {
+        document.getElementById('modal-room-title').textContent = 'Nueva habitacion';
+        document.getElementById('room-number').value = '';
+        document.getElementById('room-number').disabled = false;
+        document.getElementById('room-type').value = '';
+        document.getElementById('room-capacity').value = '';
+        document.getElementById('room-rate').value = '';
+        document.getElementById('room-description').value = '';
+        document.getElementById('room-photo').value = '';
+        document.getElementById('room-amenities').value = '';
+        document.getElementById('room-editing-number').value = '';
+        clearAlert('modal-alert');
+    }
+
+    function handleOverlayClick(event, modalId) {
+        if (event.target === event.currentTarget) {
+            closeModal(modalId);
+            if (modalId === 'modal-room') resetRoomForm();
+        }
+    }
+
+    // Limpiar formulario al abrir modal de creacion
+    document.getElementById('modal-room').addEventListener('click', function(){});
+    document.querySelector('[onclick="openModal(\'modal-room\')"]').addEventListener('click', resetRoomForm);
+</script>
+</body>
+</html>

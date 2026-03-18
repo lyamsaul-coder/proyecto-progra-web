@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProBook - Habitaciones Disponibles</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .search-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem;
+        }
+
+        .search-card h2 {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .search-fields {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .search-fields .form-group {
+            margin-bottom: 0;
+            flex: 1;
+            min-width: 160px;
+        }
+
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .room-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .room-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .room-card-top {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .room-number-large {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+
+        .room-type-label {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .room-capacity-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+        }
+
+        .room-card-body {
+            padding: 1.25rem;
+            flex: 1;
+        }
+
+        .room-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .amenities-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-bottom: 1rem;
+        }
+
+        .amenity-chip {
+            background: rgba(44, 95, 138, 0.07);
+            color: var(--primary);
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.2rem 0.55rem;
+            border-radius: 20px;
+        }
+
+        .cost-breakdown {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 0.85rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .cost-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            padding: 0.2rem 0;
+            color: var(--text-light);
+        }
+
+        .cost-row.total {
+            border-top: 1px solid var(--border);
+            margin-top: 0.3rem;
+            padding-top: 0.4rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--primary);
+        }
+
+        .room-card-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .room-card-footer {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .results-title {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .results-count {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <a href="/guest-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
+    <div id="nav-user" class="navbar-user"></div>
+</nav>
+
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Mi cuenta</div>
+            <a href="/guest-dashboard.html" class="sidebar-link">🏠 Inicio</a>
+            <a href="/rooms-list.html" class="sidebar-link active">🏨 Habitaciones</a>
+            <a href="/reservation.html" class="sidebar-link" id="sidebar-reserve">📅 Reservar</a>
+            <a href="/already-reserved.html" class="sidebar-link hidden" id="sidebar-my-reservation">📋 Mi reserva</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">Cuenta</div>
+            <button class="sidebar-link" onclick="logout()">🚪 Cerrar sesion</button>
+        </div>
+    </aside>
+
+    <!-- Contenido -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Habitaciones disponibles</h1>
+            <p class="page-subtitle">Busca por fechas para ver disponibilidad y costos estimados</p>
+        </div>
+
+        <!-- Busqueda por fechas -->
+        <div class="search-card">
+            <h2>Buscar disponibilidad</h2>
+            <div class="search-fields">
+                <div class="form-group">
+                    <label class="form-label">Fecha de entrada</label>
+                    <input type="date" id="check-in" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fecha de salida</label>
+                    <input type="date" id="check-out" class="form-control">
+                </div>
+                <button class="btn btn-primary" onclick="searchRooms()">
+                    Buscar
+                </button>
+                <button class="btn btn-outline" onclick="loadAllRooms()">
+                    Ver todas
+                </button>
+            </div>
+            <div id="search-alert" class="mt-2"></div>
+        </div>
+
+        <!-- Resultados -->
+        <div id="results-section" class="hidden">
+            <div class="results-header">
+                <span class="results-title" id="results-title">Habitaciones disponibles</span>
+                <span class="results-count" id="results-count"></span>
+            </div>
+        </div>
+
+        <div id="rooms-grid" class="rooms-grid">
+            <div class="empty-state" style="grid-column:1/-1">
+                <div class="empty-state-icon">🔍</div>
+                <div class="empty-state-title">Selecciona las fechas</div>
+                <div class="empty-state-desc">Ingresa tu fecha de entrada y salida para ver habitaciones disponibles con costos estimados</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+    requireAuth('guest');
+    renderNavbar('guest');
+
+    // Mostrar/ocultar links segun estado de reserva
+    const user = getUser();
+    if (user?.hasReserved) {
+        const sidebarReserve = document.getElementById('sidebar-reserve');
+        const sidebarMyRes   = document.getElementById('sidebar-my-reservation');
+        if (sidebarReserve) sidebarReserve.classList.add('hidden');
+        if (sidebarMyRes)   sidebarMyRes.classList.remove('hidden');
+    }
+
+    // Establecer fecha minima de hoy
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('check-in').min = today;
+    document.getElementById('check-out').min = today;
+
+    document.getElementById('check-in').addEventListener('change', function() {
+        document.getElementById('check-out').min = this.value;
+    });
+
+    async function searchRooms() {
+        const checkIn = document.getElementById('check-in').value;
+        const checkOut = document.getElementById('check-out').value;
+
+        clearAlert('search-alert');
+
+        if (!checkIn || !checkOut) {
+            showAlert('search-alert', 'Por favor selecciona ambas fechas.', 'warning');
+            return;
+        }
+
+        if (checkIn >= checkOut) {
+            showAlert('search-alert', 'La fecha de salida debe ser posterior a la entrada.', 'warning');
+            return;
+        }
+
+        try {
+            const checkInApi = inputDateToApi(checkIn);
+            const checkOutApi = inputDateToApi(checkOut);
+            const data = await apiGet(`/Rooms/available?checkIn=${checkInApi}&checkOut=${checkOutApi}`);
+
+            document.getElementById('results-section').classList.remove('hidden');
+            document.getElementById('results-title').textContent =
+                `Disponibles del ${formatDate(checkInApi)} al ${formatDate(checkOutApi)}`;
+            document.getElementById('results-count').textContent =
+                `${data.totalAvailable} habitacion${data.totalAvailable !== 1 ? 'es' : ''} disponible${data.totalAvailable !== 1 ? 's' : ''}`;
+
+            renderRooms(data.rooms, checkInApi, checkOutApi, data.nights);
+
+        } catch (error) {
+            showAlert('search-alert', error.message, 'danger');
+        }
+    }
+
+    async function loadAllRooms() {
+        document.getElementById('check-in').value = '';
+        document.getElementById('check-out').value = '';
+        clearAlert('search-alert');
+
+        try {
+            const rooms = await apiGet('/Rooms');
+            document.getElementById('results-section').classList.remove('hidden');
+            document.getElementById('results-title').textContent = 'Todas las habitaciones';
+            document.getElementById('results-count').textContent = `${rooms.length} habitaciones`;
+            renderRooms(rooms, null, null, null);
+        } catch (error) {
+            showAlert('search-alert', error.message, 'danger');
+        }
+    }
+
+    function getImageByType(roomType, photoUrl) {
+        if (photoUrl && photoUrl !== 'string' && photoUrl.startsWith('http')) return photoUrl;
+        const map = {
+            'Simple':    'https://i.imgur.com/CmaHmWN.png',
+            'Doble':     'https://i.imgur.com/LVbGuzF.png',
+            'Suite':     'https://i.imgur.com/C3RYOAp.png',
+            'Suite VIP': 'https://i.imgur.com/tIaJ89i.png',
+            'Deluxe':    'https://i.imgur.com/AvNZrR8.png',
+            'Familiar':  'https://i.imgur.com/AEAor06.png'
+        };
+        return map[roomType] || 'https://i.imgur.com/CmaHmWN.png';
+    }
+
+    function renderRooms(rooms, checkIn, checkOut, nights) {
+        const grid = document.getElementById('rooms-grid');
+
+        if (rooms.length === 0) {
+            grid.innerHTML = `
+                    <div class="empty-state" style="grid-column:1/-1">
+                        <div class="empty-state-icon">😔</div>
+                        <div class="empty-state-title">Sin disponibilidad</div>
+                        <div class="empty-state-desc">No hay habitaciones disponibles en esas fechas. Intenta con otras fechas.</div>
+                    </div>`;
+            return;
+        }
+
+        grid.innerHTML = rooms.map(room => {
+            const amenities = Array.isArray(room.amenities)
+                ? room.amenities.flatMap(a => a.split(',').map(x => x.trim())).filter(Boolean)
+                : [];
+
+            const hasEstimate = nights && room.estimatedTotal;
+            const reserveUrl = checkIn && checkOut
+                ? `/reservation.html?roomNumber=${room.roomNumber}&checkIn=${checkIn}&checkOut=${checkOut}`
+                : `/reservation.html?roomNumber=${room.roomNumber}`;
+
+            const canReserve = !user?.hasReserved;
+
+            return `
+                <div class="room-card">
+                    <img src="${getImageByType(room.roomType, room.photoUrl)}"
+                         alt="Habitacion ${room.roomNumber}"
+                         class="room-card-img"
+                         onerror="this.src='https://i.imgur.com/CmaHmWN.png'">
+                    <div class="room-card-top">
+                        <span class="room-number-large">Hab. ${room.roomNumber}</span>
+                        <span class="room-type-label">${room.roomType}</span>
+                        <span class="room-capacity-badge">👥 ${room.capacity} pers.</span>
+                    </div>
+                    <div class="room-card-body">
+                        ${room.description && room.description !== 'string'
+                ? `<p class="room-desc">${room.description}</p>` : ''}
+                        ${amenities.length > 0 ? `
+                        <div class="amenities-list">
+                            ${amenities.map(a => `<span class="amenity-chip">${a}</span>`).join('')}
+                        </div>` : ''}
+                        ${hasEstimate ? `
+                        <div class="cost-breakdown">
+                            <div class="cost-row">
+                                <span>Tarifa base</span>
+                                <span>${formatCurrency(room.baseRate)} x ${nights} noches</span>
+                            </div>
+                            <div class="cost-row">
+                                <span>Impuesto (15%)</span>
+                                <span>${formatCurrency(room.estimatedTax)}</span>
+                            </div>
+                            <div class="cost-row total">
+                                <span>Total estimado</span>
+                                <span>${formatCurrency(room.estimatedTotal)}</span>
+                            </div>
+                        </div>` : `
+                        <div class="cost-breakdown">
+                            <div class="cost-row">
+                                <span>Tarifa base por noche</span>
+                                <span>${formatCurrency(room.baseRate)}</span>
+                            </div>
+                        </div>`}
+                    </div>
+                    <div class="room-card-footer">
+                        ${canReserve
+                ? `<a href="${reserveUrl}" class="btn btn-primary btn-block">
+                                Reservar esta habitacion
+                               </a>`
+                : `<div class="alert alert-warning" style="margin:0;font-size:0.82rem">
+                                Ya tienes una reserva activa
+                               </div>`
+            }
+                    </div>
+                </div>`;
+        }).join('');
+    }
+</script>
+</body>
+</html>

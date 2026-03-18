@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProBook - Huespedes</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            border: 1.5px solid var(--border);
+            background: white;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-light);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .guest-email {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <a href="/manager-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
+    <div id="nav-user" class="navbar-user"></div>
+</nav>
+
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Principal</div>
+            <a href="/manager-dashboard.html" class="sidebar-link">📊 Dashboard</a>
+            <a href="/room-management.html" class="sidebar-link">🏨 Habitaciones</a>
+            <a href="/guest-list.html" class="sidebar-link active">👥 Huespedes</a>
+            <a href="/reports.html" class="sidebar-link">📈 Reportes</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">Cuenta</div>
+            <button class="sidebar-link" onclick="logout()">🚪 Cerrar sesion</button>
+        </div>
+    </aside>
+
+    <!-- Contenido -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Huespedes</h1>
+            <p class="page-subtitle">Lista de huespedes registrados y estado de reservas</p>
+        </div>
+
+        <!-- Resumen -->
+        <div class="summary-cards">
+            <div class="stat-card">
+                <div class="stat-label">Total Huespedes</div>
+                <div class="stat-value" id="total-guests">--</div>
+                <div class="stat-desc">Registrados en el sistema</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Con Reserva</div>
+                <div class="stat-value" id="with-reservation" style="color:var(--success)">--</div>
+                <div class="stat-desc">Reserva confirmada</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Sin Reserva</div>
+                <div class="stat-value" id="without-reservation" style="color:var(--text-muted)">--</div>
+                <div class="stat-desc">Aun no han reservado</div>
+            </div>
+        </div>
+
+        <!-- Filtros y busqueda -->
+        <div class="filter-bar">
+            <input type="text" id="search-input" class="form-control"
+                   placeholder="Buscar por nombre o email..."
+                   oninput="filterGuests()"
+                   style="max-width:280px">
+            <button class="filter-btn active" onclick="setFilter('all', this)">Todos</button>
+            <button class="filter-btn" onclick="setFilter('reserved', this)">Con reserva</button>
+            <button class="filter-btn" onclick="setFilter('not-reserved', this)">Sin reserva</button>
+        </div>
+
+        <!-- Tabla -->
+        <div class="card">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Huesped</th>
+                        <th>Estado</th>
+                        <th>Habitacion</th>
+                        <th>Fechas</th>
+                        <th>Noches</th>
+                        <th>Total</th>
+                    </tr>
+                    </thead>
+                    <tbody id="guests-table">
+                    <tr><td colspan="6" class="text-center" style="padding:2rem">
+                        <span class="spinner spinner-primary"></span>
+                    </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+    requireAuth('manager');
+    renderNavbar('manager');
+
+    let allGuests = [];
+    let currentFilter = 'all';
+
+    loadGuests();
+
+    async function loadGuests() {
+        try {
+            const data = await apiGet('/Guests');
+            allGuests = data.guests;
+
+            document.getElementById('total-guests').textContent = data.totalGuests;
+            document.getElementById('with-reservation').textContent = data.totalWithReservation;
+            document.getElementById('without-reservation').textContent = data.totalWithoutReservation;
+
+            renderGuests(allGuests);
+        } catch (error) {
+            document.getElementById('guests-table').innerHTML =
+                `<tr><td colspan="6" class="text-center text-muted" style="padding:2rem">
+                        Error al cargar huespedes: ${error.message}</td></tr>`;
+        }
+    }
+
+    function renderGuests(guests) {
+        const tbody = document.getElementById('guests-table');
+
+        if (guests.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding:2rem">
+                    <div class="empty-state-icon">👥</div>
+                    <div class="empty-state-title">No hay huespedes</div>
+                </td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = guests.map(g => `
+                <tr>
+                    <td>
+                        <div style="font-weight:600">${g.fullname}</div>
+                        <div class="guest-email">${g.email}</div>
+                    </td>
+                    <td>${getStatusBadge(g.reservationStatus)}</td>
+                    <td>${g.roomNumber
+            ? `<strong>Hab. ${g.roomNumber}</strong><br>
+                           <span style="font-size:0.78rem;color:var(--text-muted)">${g.roomType}</span>`
+            : '<span class="text-muted">-</span>'
+        }</td>
+                    <td style="font-size:0.85rem">${g.checkInDate
+            ? `${formatDate(g.checkInDate)}<br>
+                           <span style="color:var(--text-muted)">→ ${formatDate(g.checkOutDate)}</span>`
+            : '<span class="text-muted">-</span>'
+        }</td>
+                    <td>${g.nights != null ? g.nights : '-'}</td>
+                    <td>${g.totalCost != null ? formatCurrency(g.totalCost) : '-'}</td>
+                </tr>
+            `).join('');
+    }
+
+    function setFilter(filter, btn) {
+        currentFilter = filter;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyFilters();
+    }
+
+    function filterGuests() {
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const term = document.getElementById('search-input').value.toLowerCase();
+
+        let filtered = allGuests.filter(g => {
+            const matchesSearch = !term ||
+                g.fullname.toLowerCase().includes(term) ||
+                g.email.toLowerCase().includes(term);
+
+            const matchesFilter =
+                currentFilter === 'all' ||
+                (currentFilter === 'reserved' && g.hasReserved) ||
+                (currentFilter === 'not-reserved' && !g.hasReserved);
+
+            return matchesSearch && matchesFilter;
+        });
+
+        renderGuests(filtered);
+    }
+</script>
+</body>
+</html>

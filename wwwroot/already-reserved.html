@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProBook - Ya Tienes Reserva</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .blocked-wrapper {
+            max-width: 560px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+            text-align: center;
+        }
+
+        .blocked-icon {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, #E67E22, #F39C12);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 8px 25px rgba(230, 126, 34, 0.3);
+        }
+
+        .blocked-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .blocked-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .existing-reservation {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .existing-header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 1.25rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .existing-room-number {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .existing-room-type {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.82rem;
+        }
+
+        .existing-status {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .existing-body {
+            padding: 1.5rem 1.75rem;
+        }
+
+        .existing-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .existing-detail-item {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 0.85rem 1rem;
+        }
+
+        .existing-detail-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .existing-detail-value {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .immutable-notice {
+            background: rgba(230, 126, 34, 0.06);
+            border: 1px solid rgba(230, 126, 34, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 0.85rem 1rem;
+            margin-top: 1.25rem;
+            font-size: 0.82rem;
+            color: var(--warning);
+            line-height: 1.5;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .blocked-wrapper { animation: fadeInUp 0.4s ease; }
+    </style>
+</head>
+<body style="background:var(--bg)">
+
+<!-- Navbar simple -->
+<nav class="navbar">
+    <a href="/guest-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
+    <div id="nav-user" class="navbar-user"></div>
+</nav>
+
+<div class="blocked-wrapper">
+    <div class="blocked-icon">🔒</div>
+    <h1 class="blocked-title">Ya tienes una reserva</h1>
+    <p class="blocked-subtitle">
+        El sistema permite una sola reserva por huesped.
+        Aqui estan los detalles de tu reserva activa.
+    </p>
+
+    <!-- Datos de la reserva existente -->
+    <div class="existing-reservation" id="reservation-card">
+        <div style="padding:2rem;text-align:center">
+            <span class="spinner spinner-primary"></span>
+        </div>
+    </div>
+
+    <div class="actions">
+        <a href="/guest-dashboard.html" class="btn btn-primary btn-lg">
+            Ir a mi panel
+        </a>
+    </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+    requireAuth('guest');
+    renderNavbar('guest');
+
+    loadReservation();
+
+    async function loadReservation() {
+        try {
+            const r = await apiGet('/Reservations/my');
+            renderReservation(r);
+        } catch {
+            // Si no encuentra reserva, mostrar datos del usuario
+            renderFromUserData();
+        }
+    }
+
+    function renderReservation(r) {
+        document.getElementById('reservation-card').innerHTML = `
+                <div class="existing-header">
+                    <div>
+                        <div class="existing-room-number">Hab. ${r.roomNumber}</div>
+                        <div class="existing-room-type">${r.roomType}</div>
+                    </div>
+                    <div class="existing-status">Confirmada</div>
+                </div>
+                <div class="existing-body">
+                    <div class="existing-detail-grid">
+                        <div class="existing-detail-item">
+                            <div class="existing-detail-label">Check-in</div>
+                            <div class="existing-detail-value">${formatDate(r.checkInDate)}</div>
+                        </div>
+                        <div class="existing-detail-item">
+                            <div class="existing-detail-label">Check-out</div>
+                            <div class="existing-detail-value">${formatDate(r.checkOutDate)}</div>
+                        </div>
+                        <div class="existing-detail-item">
+                            <div class="existing-detail-label">Noches</div>
+                            <div class="existing-detail-value">${r.nights}</div>
+                        </div>
+                    </div>
+                    <div class="immutable-notice">
+                        🔒 Esta reserva no puede modificarse ni cancelarse.
+                        Si necesitas asistencia, comunicate con el gerente del hotel.
+                    </div>
+                </div>`;
+    }
+
+    function renderFromUserData() {
+        const user = getUser();
+        document.getElementById('reservation-card').innerHTML = `
+                <div class="existing-body" style="text-align:center;padding:1.5rem">
+                    <div style="font-size:1rem;font-weight:600;margin-bottom:0.5rem">
+                        Habitacion: ${user?.reservedRoomId || 'Ver en el panel'}
+                    </div>
+                    <div style="color:var(--text-muted);font-size:0.875rem">
+                        Fechas: ${user?.reservedDates || 'Disponibles en tu panel'}
+                    </div>
+                    <div class="immutable-notice" style="margin-top:1rem">
+                        🔒 Tu reserva esta registrada y no puede modificarse.
+                    </div>
+                </div>`;
+    }
+</script>
+</body>
+</html>

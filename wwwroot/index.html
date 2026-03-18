@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProBook - Hospedaje digital, experiencias personalizadas</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body { overflow-x: hidden; }
+
+        .hero {
+            min-height: 100vh;
+            background: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero::before {
+            content: \'\';
+            position: absolute;
+            top: 0; right: 0;
+            width: 50%; height: 100%;
+            background: linear-gradient(135deg, rgba(44, 95, 138, 0.04) 0%, rgba(44, 95, 138, 0.02) 100%);
+        }
+
+        .hero::after {
+            content: \'\';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .hero-nav {
+            padding: 1.25rem 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 10;
+            border-bottom: 1px solid var(--border);
+            background: white;
+        }
+
+        .hero-brand {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .hero-brand span { color: var(--accent); }
+
+        .hero-nav-links { display: flex; gap: 1rem; align-items: center; }
+
+        .hero-nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .hero-nav-links a:hover { color: var(--primary); }
+
+        .btn-hero {
+            background: var(--accent);
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .btn-hero:hover {
+            background: var(--accent-light);
+            box-shadow: 0 4px 15px rgba(212, 168, 83, 0.4);
+        }
+
+        .hero-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 3rem;
+            padding: 3rem 4rem;
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            text-align: left;
+        }
+
+        .hero-text { max-width: 540px; }
+
+        .hero-tag {
+            display: inline-block;
+            background: rgba(44, 95, 138, 0.08);
+            color: var(--primary);
+            border: 1px solid rgba(44, 95, 138, 0.15);
+            padding: 0.35rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.15;
+            margin-bottom: 1.25rem;
+        }
+
+        .hero-title span { color: var(--accent); }
+
+        .hero-desc {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+            max-width: 480px;
+        }
+
+        .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+        .btn-hero-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.85rem 2rem;
+            border-radius: var(--radius);
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(44, 95, 138, 0.25);
+        }
+
+        .btn-hero-primary:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(44, 95, 138, 0.35);
+        }
+
+        .btn-hero-secondary {
+            background: transparent;
+            color: var(--primary);
+            padding: 0.85rem 2rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            border: 1.5px solid var(--primary);
+            transition: var(--transition);
+        }
+
+        .btn-hero-secondary:hover { background: rgba(44, 95, 138, 0.06); }
+
+        .hero-image {
+            flex-shrink: 0;
+            width: 380px;
+            height: 380px;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            border: 4px solid white;
+        }
+
+        .hero-image img { width: 100%; height: 100%; object-fit: cover; }
+
+        .features { background: var(--bg); padding: 5rem 4rem; }
+
+        .section-header { text-align: center; margin-bottom: 3rem; }
+
+        .section-tag {
+            display: inline-block;
+            background: rgba(44, 95, 138, 0.08);
+            color: var(--primary);
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.75rem;
+        }
+
+        .section-desc { color: var(--text-light); font-size: 1rem; max-width: 500px; margin: 0 auto; }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            transition: var(--transition);
+        }
+
+        .feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+
+        .feature-icon {
+            width: 52px; height: 52px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .feature-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-desc { color: var(--text-light); font-size: 0.875rem; line-height: 1.6; }
+
+        .cta {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 5rem 4rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta::before {
+            content: \'\';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(212, 168, 83, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .cta-content { position: relative; z-index: 1; }
+
+        .cta-title {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .cta-desc { color: rgba(255,255,255,0.75); font-size: 1rem; margin-bottom: 2rem; }
+
+        .footer {
+            background: var(--text);
+            color: rgba(255,255,255,0.5);
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.875rem;
+        }
+
+        .footer span { color: var(--accent); }
+
+        @media (max-width: 768px) {
+            .hero-nav { padding: 1.5rem; }
+            .hero-content { padding: 2rem 1.5rem; flex-direction: column; }
+            .hero-title { font-size: 2.2rem; }
+            .hero-image { width: 100%; height: 220px; }
+            .features { padding: 3rem 1.5rem; }
+            .features-grid { grid-template-columns: 1fr; }
+            .cta { padding: 3rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<section class="hero">
+    <nav class="hero-nav">
+        <a href="/" class="hero-brand">Pro<span>Book</span></a>
+        <div class="hero-nav-links">
+            <a href="/login.html">Iniciar Sesion</a>
+            <a href="/register.html" class="btn-hero">Registrarse</a>
+        </div>
+    </nav>
+
+    <div class="hero-content">
+        <div class="hero-text">
+            <div class="hero-tag">Sistema Hotelero Digital</div>
+            <h1 class="hero-title">
+                Hospedaje digital,<br>
+                experiencias <span>personalizadas</span>
+            </h1>
+            <p class="hero-desc">
+                ProBook digitaliza el proceso de reservas hoteleras con validaciones
+                robustas, reportes en tiempo real y una experiencia fluida para
+                gerentes y huespedes.
+            </p>
+            <div class="hero-actions">
+                <a href="/register.html" class="btn-hero-primary">Comenzar ahora</a>
+                <a href="/login.html" class="btn-hero-secondary">Iniciar sesion</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="https://i.imgur.com/QfqvfVM.jpeg" alt="ProBook Hotel">
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="section-header">
+        <div class="section-tag">Funcionalidades</div>
+        <h2 class="section-title">Todo lo que necesitas para gestionar tu hotel</h2>
+        <p class="section-desc">Una plataforma completa con roles diferenciados para gerentes y huespedes.</p>
+    </div>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">🏨</div>
+            <h3 class="feature-title">Gestion de Habitaciones</h3>
+            <p class="feature-desc">Crea, edita y administra habitaciones con tipos, capacidades, amenidades y tarifas base desde un panel centralizado.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📅</div>
+            <h3 class="feature-title">Reservas Inteligentes</h3>
+            <p class="feature-desc">El sistema previene el overbooking verificando disponibilidad en tiempo real y aplica validaciones de reserva unica por huesped.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3 class="feature-title">Reportes en Tiempo Real</h3>
+            <p class="feature-desc">Dashboard con graficos de ocupacion, ingresos por periodo, distribucion por tipo de habitacion y tendencias temporales.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">👥</div>
+            <h3 class="feature-title">Gestion de Huespedes</h3>
+            <p class="feature-desc">Lista completa de huespedes con estado de reservas, informacion de habitacion reservada y trazabilidad completa.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3 class="feature-title">Seguridad con JWT</h3>
+            <p class="feature-desc">Autenticacion segura con tokens JWT, roles diferenciados para gerente y huesped, y validaciones en cada endpoint.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💰</div>
+            <h3 class="feature-title">Calculo Automatico</h3>
+            <p class="feature-desc">Costo total calculado automaticamente con desglose de tarifa base, noches e impuesto del 15% antes de confirmar.</p>
+        </div>
+    </div>
+</section>
+
+<section class="cta">
+    <div class="cta-content">
+        <h2 class="cta-title">Listo para digitalizar tu hotel?</h2>
+        <p class="cta-desc">Registrate ahora y comienza a gestionar tus reservas de forma eficiente.</p>
+        <a href="/register.html" class="btn-hero-primary">Crear cuenta gratis</a>
+    </div>
+</section>
+
+<footer class="footer">
+    <p>ProBook &copy; 2026 &mdash; Desarrollado por Josue Gavidia</p>
+</footer>
+
+<script src="/js/app.js"></script>
+<script>
+    if (isLoggedIn()) {
+        const role = getRole();
+        window.location.href = role === 'manager'
+            ? '/manager-dashboard.html'
+            : '/guest-dashboard.html';
+    }
+</script>
+</body>
+</html>
