@@ -93,7 +93,8 @@ public class AuthService : IAuthService
                 ReservationTimestamp = null,
                 CreatedAt = DateTime.UtcNow,
                 LastLogin = DateTime.UtcNow,
-                IsActive = true
+                IsActive = true,
+                RequiresPasswordChange = false
             };
 
             // Guardar con Dictionary para incluir el hash que no esta en el modelo
@@ -108,6 +109,7 @@ public class AuthService : IAuthService
                 { "CreatedAt", newUser.CreatedAt },
                 { "LastLogin", newUser.LastLogin },
                 { "IsActive", newUser.IsActive },
+                { "RequiresPasswordChange", newUser.RequiresPasswordChange },
                 { "PasswordHash", passwordHash }
             };
 
@@ -382,6 +384,8 @@ public class AuthService : IAuthService
 
     // --------------------------------------------------------
     // RESET PASSWORD
+    // Asigna una contrasena temporal y activa RequiresPasswordChange = true
+    // para forzar al usuario a cambiarla la proxima vez que inicie sesion
     // --------------------------------------------------------
 
     public async Task ResetPassword(string email, string newPassword)
@@ -409,17 +413,20 @@ public class AuthService : IAuthService
             var userDoc = query.Documents[0];
             var userId = userDoc.ToDictionary()["Id"].ToString()!;
 
-            // Hashear la nueva contrasena antes de guardarla
+            // Hashear la contrasena temporal antes de guardarla
             var newPasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
 
+            // Guardar el hash Y activar RequiresPasswordChange = true
+            // Esto fuerza al usuario a cambiar la contrasena la proxima vez que inicie sesion
             await usersCollection.Document(userId).UpdateAsync(
                 new Dictionary<string, object>
                 {
-                    { "PasswordHash", newPasswordHash }
+                    { "PasswordHash", newPasswordHash },
+                    { "RequiresPasswordChange", true }
                 }
             );
 
-            _logger.LogInformation($"Contrasena actualizada para: {email}");
+            _logger.LogInformation($"Contrasena temporal asignada para: {email}");
         }
         catch (ArgumentException)
         {
@@ -432,6 +439,63 @@ public class AuthService : IAuthService
         catch (Exception ex)
         {
             _logger.LogError($"Error en ResetPassword: {ex.Message}");
+            throw;
+        }
+    }
+
+    // --------------------------------------------------------
+    // CHANGE PASSWORD
+    // El usuario cambia su propia contrasena desde dentro de su sesion activa.
+    // Desactiva RequiresPasswordChange despues de guardar.
+    // --------------------------------------------------------
+
+    public async Task<bool> VerifyCurrentPassword(string userId, string currentPassword)
+    {
+        try
+        {
+            var usersCollection = _firebaseService.GetCollection("users");
+            var userDoc = await usersCollection.Document(userId).GetSnapshotAsync();
+            if (!userDoc.Exists) return false;
+
+            var dict = userDoc.ToDictionary();
+            var hash = dict.ContainsKey("PasswordHash") ? dict["PasswordHash"].ToString()! : "";
+            return BCrypt.Net.BCrypt.Verify(currentPassword, hash);
+        }
+        catch { return false; }
+    }
+
+    public async Task ChangePassword(string userId, string email, string newPassword)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(newPassword))
+                throw new ArgumentException("La nueva contrasena es requerida");
+
+            if (newPassword.Length < 6)
+                throw new ArgumentException("La contrasena debe tener al menos 6 caracteres");
+
+            var usersCollection = _firebaseService.GetCollection("users");
+
+            var newPasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+
+            // Guardar el nuevo hash y desactivar la bandera de cambio obligatorio
+            await usersCollection.Document(userId).UpdateAsync(
+                new Dictionary<string, object>
+                {
+                    { "PasswordHash", newPasswordHash },
+                    { "RequiresPasswordChange", false }
+                }
+            );
+
+            _logger.LogInformation($"Contrasena cambiada por el usuario: {email}");
+        }
+        catch (ArgumentException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error en ChangePassword: {ex.Message}");
             throw;
         }
     }
@@ -465,7 +529,8 @@ public class AuthService : IAuthService
             LastLogin = dict.ContainsKey("LastLogin")
                 ? ((Timestamp)dict["LastLogin"]).ToDateTime()
                 : DateTime.UtcNow,
-            IsActive = dict.ContainsKey("IsActive") && (bool)dict["IsActive"]
+            IsActive = dict.ContainsKey("IsActive") && (bool)dict["IsActive"],
+            RequiresPasswordChange = dict.ContainsKey("RequiresPasswordChange") && (bool)dict["RequiresPasswordChange"]
         };
 
         // ReservationTimestamp es nullable, solo se asigna si existe en el documento

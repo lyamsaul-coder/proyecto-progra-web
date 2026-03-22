@@ -148,6 +148,10 @@
             <a href="/reports.html" class="sidebar-link">📈 Reportes</a>
         </div>
         <div class="sidebar-section">
+            <div class="sidebar-label">Sistema</div>
+            <a href="/settings.html" class="sidebar-link">⚙️ Configuracion</a>
+        </div>
+        <div class="sidebar-section">
             <div class="sidebar-label">Cuenta</div>
             <button class="sidebar-link" onclick="logout()">🚪 Cerrar sesion</button>
         </div>
@@ -264,6 +268,27 @@
     const user = getUser();
     if (user) document.getElementById('manager-name').textContent = user.fullname.split(' ')[0];
 
+    // Parsear "dd-MM-yyyy HH:mm" o "dd-MM-yyyy" al formato legible
+    function parseApiDate(str) {
+        if (!str) return '';
+        // Formato: "21-03-2026 10:30" o "21-03-2026"
+        const parts = str.split(' ')[0].split('-');
+        if (parts.length !== 3) return str;
+        const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        const day   = parseInt(parts[0]);
+        const month = parseInt(parts[1]) - 1;
+        return `${day} ${months[month]}`;
+    }
+
+    // Parsear a timestamp numérico para ordenamiento
+    function parseApiTimestamp(str) {
+        if (!str) return 0;
+        const [datePart, timePart] = str.split(' ');
+        const [dd, mm, yyyy] = datePart.split('-');
+        const [hh, min] = (timePart || '00:00').split(':');
+        return new Date(`${yyyy}-${mm}-${dd}T${hh}:${min}:00`).getTime();
+    }
+
     async function loadDashboard() {
         await Promise.all([loadOccupancy(), loadRecentActivity()]);
     }
@@ -290,7 +315,7 @@
             const guests = data.guests || [];
             const withReservation = guests
                 .filter(g => g.hasReserved && g.reservedAt)
-                .sort((a, b) => new Date(b.reservedAt) - new Date(a.reservedAt))
+                .sort((a, b) => parseApiTimestamp(b.reservedAt) - parseApiTimestamp(a.reservedAt))
                 .slice(0, 6);
             renderActivity(withReservation);
             renderRoomStatus(withReservation);
@@ -311,7 +336,7 @@
             const check = g.checkInDate ? 'Check-in: ' + formatDate(g.checkInDate) : '';
             const dot   = i % 2 === 0 ? '' : 'dot-gold';
             const time  = g.reservedAt
-                ? new Date(g.reservedAt).toLocaleDateString('es-HN', { day:'2-digit', month:'short' })
+                ? parseApiDate(g.reservedAt)
                 : '';
             return '<li class="activity-item">' +
                 '<span class="activity-dot ' + dot + '"></span>' +

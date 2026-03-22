@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProBook - Panel del Huesped</title>
     <link rel="stylesheet" href="/css/styles.css">
@@ -19,10 +22,8 @@
         .welcome-card::before {
             content: '';
             position: absolute;
-            top: -40px;
-            right: -40px;
-            width: 180px;
-            height: 180px;
+            top: -40px; right: -40px;
+            width: 180px; height: 180px;
             background: rgba(212, 168, 83, 0.15);
             border-radius: 50%;
         }
@@ -30,10 +31,8 @@
         .welcome-card::after {
             content: '';
             position: absolute;
-            bottom: -30px;
-            right: 100px;
-            width: 120px;
-            height: 120px;
+            bottom: -30px; right: 100px;
+            width: 120px; height: 120px;
             background: rgba(255,255,255,0.05);
             border-radius: 50%;
         }
@@ -116,48 +115,278 @@
             border-color: var(--primary);
         }
 
-        .quick-action-icon {
-            font-size: 2rem;
-            margin-bottom: 0.75rem;
-            display: block;
+        .quick-action-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+        .quick-action-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.25rem; }
+        .quick-action-desc { font-size: 0.8rem; color: var(--text-muted); }
+
+        .reservation-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            flex-wrap: wrap;
         }
 
-        .quick-action-title {
+        .btn-modify {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            cursor: pointer;
             font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .btn-modify:hover { background: var(--primary); color: white; }
+
+        .btn-cancel-res {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--danger);
+            background: transparent;
+            color: var(--danger);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .btn-cancel-res:hover { background: var(--danger); color: white; }
+
+        /* Estrellas */
+        .star-rating {
+            display: flex;
+            gap: 0.4rem;
+            margin: 0.75rem 0;
+        }
+
+        .star {
+            font-size: 2rem;
+            cursor: pointer;
+            color: #ccc;
+            transition: color 0.15s;
+            line-height: 1;
+        }
+
+        .star.active, .star:hover { color: #f59e0b; }
+        .star-rating:hover .star { color: #f59e0b; }
+        .star-rating:hover .star:hover ~ .star { color: #ccc; }
+
+        /* Tarjeta de estadía concluida */
+        .concluded-badge {
+            display: inline-block;
+            background: rgba(46, 125, 94, 0.1);
+            color: var(--success);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            border: 1px solid rgba(46, 125, 94, 0.25);
+        }
+
+        .review-section {
+            background: rgba(44, 95, 138, 0.04);
+            border: 1px solid rgba(44, 95, 138, 0.15);
+            border-radius: var(--radius-sm);
+            padding: 1.25rem;
+            margin-top: 1.25rem;
+        }
+
+        .review-section-title {
             font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text);
             margin-bottom: 0.25rem;
         }
 
-        .quick-action-desc {
-            font-size: 0.8rem;
+        .review-section-desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .review-submitted {
+            text-align: center;
+            padding: 1rem;
+            color: var(--success);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Modals */
+        .modal-overlay-custom {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay-custom.active { display: flex; }
+
+        .modal-box {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+        }
+
+        .modal-box-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-box-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+            line-height: 1.5;
+        }
+
+        .modal-box-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        [data-theme="dark"] .quick-action-card { background: #1A1D26 !important; border-color: #2A2D3A; }
+
+        /* ---- Historial de reservas ---- */
+        .history-section {
+            margin-top: 1.75rem;
+        }
+
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .history-toggle-icon {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            transition: transform 0.25s;
+        }
+
+        .history-toggle-icon.open { transform: rotate(180deg); }
+
+        .history-list { display: none; }
+        .history-list.open { display: block; }
+
+        .history-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.5rem 1rem;
+            align-items: start;
+            transition: var(--transition);
+        }
+
+        .history-item:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .history-item-room {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .history-item-type {
+            font-size: 0.78rem;
             color: var(--text-muted);
         }
 
-        [data-theme="dark"] .quick-action-card {
-            background: #1A1D26 !important;
-            border-color: #2A2D3A;
+        .history-item-dates {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
         }
+
+        .history-item-cost {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: right;
+        }
+
+        .history-item-nights {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        .history-item-status {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.35rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .history-reviewed {
+            font-size: 0.75rem;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .history-pending-review {
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .history-empty {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        [data-theme="dark"] .history-item { background: #1A1D26; border-color: #2A2D3A; }
+        [data-theme="dark"] .history-item:hover { border-color: #4A90C4; }
+        [data-theme="dark"] .history-item-status { border-color: #2A2D3A; }
+        [data-theme="dark"] .history-empty { background: #1A1D26; border-color: #2A2D3A; }
         [data-theme="dark"] .quick-action-title { color: #E8EAF0; }
         [data-theme="dark"] .quick-action-desc { color: #A0A8B8; }
-        [data-theme="dark"] .reservation-status-card {
-            background: #1A1D26 !important;
-            border-color: #2A2D3A;
-        }
-        [data-theme="dark"] .detail-label { color: #A0A8B8; }
-        [data-theme="dark"] .detail-value { color: #E8EAF0; }
-        [data-theme="dark"] .section-title-sm { color: #E8EAF0; }
+        [data-theme="dark"] .reservation-status-card { background: #1A1D26 !important; border-color: #2A2D3A; }
+        [data-theme="dark"] .review-section { background: rgba(74,144,196,0.05); border-color: rgba(74,144,196,0.2); }
+        [data-theme="dark"] .modal-box { background: #1A1D26; border-color: #2A2D3A; }
     </style>
 </head>
 <body>
 
-<!-- Navbar -->
 <nav class="navbar">
     <a href="/guest-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
     <div id="nav-user" class="navbar-user"></div>
 </nav>
 
 <div class="layout">
-    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-section">
             <div class="sidebar-label">Mi cuenta</div>
@@ -172,19 +401,16 @@
         </div>
     </aside>
 
-    <!-- Contenido -->
     <main class="main-content">
-
-        <!-- Bienvenida -->
         <div class="welcome-card">
             <h1 class="welcome-title">Bienvenido, <span id="user-name">...</span></h1>
             <p class="welcome-subtitle">Gestiona tu reserva y explora las habitaciones disponibles</p>
         </div>
 
-        <!-- Estado de reserva -->
+        <div id="alert-container" style="margin-bottom:1rem"></div>
+
         <div id="reservation-section"></div>
 
-        <!-- Acciones rapidas -->
         <div class="page-header mt-3">
             <h2 class="page-title" style="font-size:1.2rem">Acciones rapidas</h2>
         </div>
@@ -200,7 +426,57 @@
                 <div class="quick-action-desc">Selecciona fechas y confirma</div>
             </a>
         </div>
+
+        <!-- Historial de reservas -->
+        <div class="history-section" id="history-section" style="display:none">
+            <div class="history-header" onclick="toggleHistory()">
+                <h2 class="page-title" style="font-size:1.2rem;margin:0">📋 Mis estadías anteriores</h2>
+                <span class="history-toggle-icon" id="history-toggle-icon">▼</span>
+            </div>
+            <div class="history-list" id="history-list">
+                <div class="history-empty">Cargando historial...</div>
+            </div>
+        </div>
     </main>
+</div>
+
+<!-- Modal modificar fechas -->
+<div id="modal-modify" class="modal-overlay-custom">
+    <div class="modal-box" style="max-width:440px">
+        <div class="modal-box-title">Modificar fechas de reserva</div>
+        <div id="modify-alert" style="margin-bottom:0.75rem"></div>
+        <div class="grid-2" style="gap:0.75rem;margin-bottom:1rem">
+            <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Nueva fecha de entrada</label>
+                <input type="date" id="modify-checkin" class="form-control" onchange="checkModifyAvailability()">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Nueva fecha de salida</label>
+                <input type="date" id="modify-checkout" class="form-control" onchange="checkModifyAvailability()">
+            </div>
+        </div>
+        <div id="modify-availability" style="margin-bottom:1rem;font-size:0.82rem;color:var(--text-muted)"></div>
+        <div class="modal-box-actions">
+            <button class="btn btn-outline" onclick="closeModify()">Cancelar</button>
+            <button id="btn-confirm-modify" class="btn btn-primary" onclick="confirmModify()">Confirmar cambio</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal confirmar cancelacion -->
+<div id="modal-cancel" class="modal-overlay-custom">
+    <div class="modal-box" style="max-width:420px">
+        <div class="modal-box-title">Cancelar reserva</div>
+        <div class="modal-box-desc">
+            ¿Estas seguro de que deseas cancelar tu reserva?
+            La habitacion quedara disponible y podras realizar una nueva reserva.
+            Esta accion no se puede deshacer.
+        </div>
+        <div class="modal-box-actions">
+            <button class="btn btn-outline" onclick="closeCancel()">No, mantener</button>
+            <button id="btn-confirm-cancel" class="btn btn-danger" onclick="executeCancel()">Si, cancelar</button>
+        </div>
+    </div>
 </div>
 
 <script src="/js/app.js"></script>
@@ -211,97 +487,592 @@
     const user = getUser();
     document.getElementById('user-name').textContent = user?.fullname || 'Huesped';
 
+    let currentReservation = null;
+    let selectedStars      = 0;
+
     loadDashboard();
 
     async function loadDashboard() {
         try {
             if (user?.hasReserved) {
-                // Tiene reserva: ocultar "Reservar", mostrar "Mi reserva"
-                const sidebarReserve = document.getElementById('sidebar-reserve');
-                const sidebarMyRes   = document.getElementById('sidebar-my-reservation');
-                if (sidebarReserve) sidebarReserve.classList.add('hidden');
-                if (sidebarMyRes)   sidebarMyRes.classList.remove('hidden');
+                // No pre-ajustamos el sidebar aqui — loadReservation lo hara
+                // una vez que sepa si la estadia esta activa, termino o fue cancelada
                 await loadReservation();
             } else {
+                setSidebarNoReservation();
                 renderNoReservation();
             }
         } catch (error) {
+            setSidebarNoReservation();
             renderNoReservation();
         }
     }
 
+    // Helpers de sidebar
+    function setSidebarActive() {
+        const sidebarReserve = document.getElementById('sidebar-reserve');
+        const sidebarMyRes   = document.getElementById('sidebar-my-reservation');
+        if (sidebarReserve) { sidebarReserve.classList.add('hidden'); sidebarReserve.style.display = ''; }
+        if (sidebarMyRes)   { sidebarMyRes.classList.remove('hidden'); }
+    }
+
+    function setSidebarNoReservation() {
+        const sidebarReserve = document.getElementById('sidebar-reserve');
+        const sidebarMyRes   = document.getElementById('sidebar-my-reservation');
+        if (sidebarReserve) { sidebarReserve.classList.remove('hidden'); sidebarReserve.style.display = ''; }
+        if (sidebarMyRes)   { sidebarMyRes.classList.add('hidden'); }
+    }
+
     async function loadReservation() {
         try {
-            const reservation = await apiGet('/Reservations/my');
-            renderReservation(reservation);
+            const reservation    = await apiGet('/Reservations/my');
+            currentReservation   = reservation;
 
-            // Ocultar opcion de reservar si ya reservo
-            document.getElementById('action-reserve').style.display = 'none';
-            document.getElementById('sidebar-reserve').style.display = 'none';
+            // Detectar si la estadía ya concluyo (checkOut < ahora en Honduras UTC-6)
+            const checkOutParts  = reservation.checkOutDate.split('-');
+            const checkOutDate   = new Date(`${checkOutParts[2]}-${checkOutParts[1]}-${checkOutParts[0]}T00:00:00Z`);
+            const hondurasNow    = new Date(Date.now() - 6 * 60 * 60 * 1000);
+            let   hasEnded       = checkOutDate < hondurasNow;
+            const isCancelled    = reservation.status === 'cancelled';
+
+            // Defensa contra el backend devolviendo una reserva vieja:
+            // Si el backend dice que expiró PERO localStorage tiene fechas vigentes,
+            // es porque el backend aún no fue recompilado con OrderByDescending.
+            // En ese caso, confiar en localStorage y marcar como NO expirada para
+            // que el usuario vea su reserva activa correctamente.
+            if (hasEnded && !isCancelled) {
+                const u = getUser();
+                const dates = u?.reservedDates || '';
+                const m = dates.match(/(\d{2})-(\d{2})-(\d{4})\s*-\s*(\d{2})-(\d{2})-(\d{4})/);
+                if (m) {
+                    const localCheckOut = new Date(`${m[6]}-${m[5]}-${m[4]}T00:00:00Z`);
+                    if (localCheckOut >= hondurasNow) {
+                        // localStorage dice que la reserva sigue vigente — usar esas fechas
+                        // y marcar como activa (el backend tiene la reserva equivocada)
+                        hasEnded = false;
+                        reservation.checkInDate  = `${m[1]}-${m[2]}-${m[3]}`;
+                        reservation.checkOutDate = `${m[4]}-${m[5]}-${m[6]}`;
+                    }
+                }
+            }
+
+            if (hasEnded || isCancelled) {
+                // Estadía concluida o cancelada: mostrar "Reservar" en sidebar, ocultar "Mi reserva"
+                setSidebarNoReservation();
+                document.getElementById('action-reserve').style.display = '';
+                renderConcludedReservation(reservation, hasEnded, isCancelled);
+                // Mostrar sección de historial (puede haber estadías previas)
+                loadAndShowHistory();
+            } else {
+                // Reserva activa: ocultar "Reservar" en sidebar, mostrar "Mi reserva"
+                setSidebarActive();
+                document.getElementById('action-reserve').style.display = 'none';
+                renderActiveReservation(reservation);
+            }
 
         } catch {
             renderNoReservation();
         }
     }
 
-    function renderReservation(r) {
+    // ---- Reserva activa ----
+
+    function renderActiveReservation(r) {
+        const checkInParts   = r.checkInDate.split('-');
+        const checkInDate    = new Date(`${checkInParts[2]}-${checkInParts[1]}-${checkInParts[0]}T00:00:00Z`);
+        const hoursToCheckIn = (checkInDate - new Date()) / (1000 * 60 * 60);
+        // Cancelar: solo si faltan más de 24h para el check-in
+        const canCancel = hoursToCheckIn > 24;
+        // Modificar: permitido siempre que la reserva no haya iniciado todavía
+        // (check-in en el futuro, aunque sea en menos de 24h)
+        const canModify = hoursToCheckIn > 0;
+
+        const cancelBtn = canCancel
+            ? `<button class="btn-cancel-res" onclick="openCancel()">Cancelar reserva</button>`
+            : `<span style="font-size:0.8rem;color:var(--text-muted)">Cancelacion solo en recepcion (menos de 24h)</span>`;
+
+        const modifyBtn = canModify
+            ? `<button class="btn-modify" onclick="openModify('${r.checkInDate}','${r.checkOutDate}')">Modificar fechas</button>`
+            : '';
+
         document.getElementById('reservation-section').innerHTML = `
-                <div class="reservation-status-card">
-                    <div class="flex-between">
-                        <div>
-                            <h2 style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:0.2rem">
-                                Mi Reserva
-                            </h2>
-                            <p style="font-size:0.85rem;color:var(--text-muted)">
-                                Confirmada el ${r.timestamp}
-                            </p>
-                        </div>
-                        ${getStatusBadge(r.status)}
+            <div class="reservation-status-card">
+                <div class="flex-between">
+                    <div>
+                        <h2 style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:0.2rem">Mi Reserva</h2>
+                        <p style="font-size:0.85rem;color:var(--text-muted)">Confirmada el ${r.timestamp}</p>
                     </div>
+                    ${getStatusBadge(r.status)}
+                </div>
+                <div class="reservation-detail-grid">
+                    <div class="reservation-detail-item">
+                        <div class="reservation-detail-label">Habitacion</div>
+                        <div class="reservation-detail-value">Hab. ${r.roomNumber}</div>
+                        <div style="font-size:0.8rem;color:var(--text-muted)">${r.roomType}</div>
+                    </div>
+                    <div class="reservation-detail-item">
+                        <div class="reservation-detail-label">Check-in</div>
+                        <div class="reservation-detail-value">${formatDate(r.checkInDate)}</div>
+                    </div>
+                    <div class="reservation-detail-item">
+                        <div class="reservation-detail-label">Check-out</div>
+                        <div class="reservation-detail-value">${formatDate(r.checkOutDate)}</div>
+                    </div>
+                    <div class="reservation-detail-item">
+                        <div class="reservation-detail-label">Noches</div>
+                        <div class="reservation-detail-value">${r.nights}</div>
+                    </div>
+                    <div class="reservation-detail-item">
+                        <div class="reservation-detail-label">Total pagado</div>
+                        <div class="reservation-detail-value" style="color:var(--primary)">${formatCurrency(r.totalCost)}</div>
+                    </div>
+                </div>
+                <div class="reservation-actions">
+                    ${modifyBtn}
+                    ${cancelBtn}
+                </div>
+            </div>`;
+    }
 
-                    <div class="reservation-detail-grid">
-                        <div class="reservation-detail-item">
-                            <div class="reservation-detail-label">Habitacion</div>
-                            <div class="reservation-detail-value">Hab. ${r.roomNumber}</div>
-                            <div style="font-size:0.8rem;color:var(--text-muted)">${r.roomType}</div>
-                        </div>
-                        <div class="reservation-detail-item">
-                            <div class="reservation-detail-label">Check-in</div>
-                            <div class="reservation-detail-value">${formatDate(r.checkInDate)}</div>
-                        </div>
-                        <div class="reservation-detail-item">
-                            <div class="reservation-detail-label">Check-out</div>
-                            <div class="reservation-detail-value">${formatDate(r.checkOutDate)}</div>
-                        </div>
-                        <div class="reservation-detail-item">
-                            <div class="reservation-detail-label">Noches</div>
-                            <div class="reservation-detail-value">${r.nights}</div>
-                        </div>
-                        <div class="reservation-detail-item">
-                            <div class="reservation-detail-label">Total pagado</div>
-                            <div class="reservation-detail-value" style="color:var(--primary)">
-                                ${formatCurrency(r.totalCost)}
-                            </div>
-                        </div>
-                    </div>
+    // ---- Estadía concluida o cancelada ----
 
-                    <div class="alert alert-info mt-2" style="margin-bottom:0">
-                        Tu reserva es definitiva y no puede modificarse. Si necesitas ayuda contacta al gerente.
+    // Clave de localStorage para marcar si ya se reviso esta reserva
+    function reviewedKey(reservationId) { return `probook_reviewed_${reservationId}`; }
+
+    async function renderConcludedReservation(r, hasEnded, isCancelled) {
+        // Verificar si ya dejo resena — primero localStorage (inmediato), luego API
+        let alreadyReviewed = false;
+        if (hasEnded) {
+            // 1. Chequeo rápido en localStorage (evita llamada a la API si ya se sabe)
+            if (localStorage.getItem(reviewedKey(r.id))) {
+                alreadyReviewed = true;
+            } else {
+                // 2. Verificar directamente si existe reseña para esta reserva
+                try {
+                    // Endpoint dedicado: devuelve 200 si existe, 404 si no
+                    await apiGet(`/Reservations/${r.id}/has-review`);
+                    alreadyReviewed = true;
+                    localStorage.setItem(reviewedKey(r.id), '1');
+                } catch { /* 404 = no hay reseña aún, continuar */ }
+            }
+        }
+
+        const statusText = isCancelled
+            ? '<span class="badge badge-muted">Cancelada</span>'
+            : '<span class="concluded-badge">Estadía concluida</span>';
+
+        const reviewSection = hasEnded ? `
+            <div class="review-section" id="review-section">
+                ${alreadyReviewed ? `
+                <div class="review-submitted">
+                    ✅ Ya dejaste tu resena para esta estadía. ¡Gracias!
+                </div>` : `
+                <div class="review-section-title">¿Como fue tu experiencia?</div>
+                <div class="review-section-desc">Califica tu estadía en la habitacion ${r.roomNumber}</div>
+                <div class="star-rating" id="star-rating">
+                    <span class="star" onclick="setStars(1)" onmouseover="hoverStars(1)" onmouseout="resetStars()">★</span>
+                    <span class="star" onclick="setStars(2)" onmouseover="hoverStars(2)" onmouseout="resetStars()">★</span>
+                    <span class="star" onclick="setStars(3)" onmouseover="hoverStars(3)" onmouseout="resetStars()">★</span>
+                    <span class="star" onclick="setStars(4)" onmouseover="hoverStars(4)" onmouseout="resetStars()">★</span>
+                    <span class="star" onclick="setStars(5)" onmouseover="hoverStars(5)" onmouseout="resetStars()">★</span>
+                </div>
+                <div class="form-group" style="margin-bottom:0.75rem">
+                    <textarea id="review-comment" class="form-control" rows="2"
+                        placeholder="Cuenta tu experiencia (opcional)..."></textarea>
+                </div>
+                <button id="btn-submit-review" class="btn btn-primary btn-sm"
+                    onclick="submitReview('${r.id}', '${r.roomNumber}')">
+                    Publicar resena
+                </button>
+                <div id="review-alert" style="margin-top:0.5rem"></div>
+                `}
+            </div>` : '';
+
+        document.getElementById('reservation-section').innerHTML = `
+            <div class="reservation-status-card">
+                <div class="flex-between">
+                    <div>
+                        <h2 style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:0.2rem">
+                            Ultima estadía
+                        </h2>
+                        <p style="font-size:0.85rem;color:var(--text-muted)">
+                            ${isCancelled ? 'Cancelada' : 'Estadía completada'} · Hab. ${r.roomNumber}
+                        </p>
                     </div>
-                </div>`;
+                    ${statusText}
+                </div>
+                <div class="reservation-detail-grid">
+                    <div class="reservation-detail-item">
+                        <div class="reservation-detail-label">Habitacion</div>
+                        <div class="reservation-detail-value">Hab. ${r.roomNumber}</div>
+                        <div style="font-size:0.8rem;color:var(--text-muted)">${r.roomType}</div>
+                    </div>
+                    <div class="reservation-detail-item">
+                        <div class="reservation-detail-label">Check-in</div>
+                        <div class="reservation-detail-value">${formatDate(r.checkInDate)}</div>
+                    </div>
+                    <div class="reservation-detail-item">
+                        <div class="reservation-detail-label">Check-out</div>
+                        <div class="reservation-detail-value">${formatDate(r.checkOutDate)}</div>
+                    </div>
+                    <div class="reservation-detail-item">
+                        <div class="reservation-detail-label">Noches</div>
+                        <div class="reservation-detail-value">${r.nights}</div>
+                    </div>
+                    <div class="reservation-detail-item">
+                        <div class="reservation-detail-label">Total pagado</div>
+                        <div class="reservation-detail-value" style="color:var(--primary)">${formatCurrency(r.totalCost)}</div>
+                    </div>
+                </div>
+                ${reviewSection}
+                <div style="margin-top:1.25rem">
+                    <a href="/reservation.html" class="btn btn-primary">
+                        Hacer una nueva reserva
+                    </a>
+                </div>
+            </div>`;
     }
 
     function renderNoReservation() {
         document.getElementById('reservation-section').innerHTML = `
-                <div class="reservation-status-card">
-                    <div class="empty-state" style="padding:1.5rem">
-                        <div class="empty-state-icon">📅</div>
-                        <div class="empty-state-title">Aun no tienes reserva</div>
-                        <div class="empty-state-desc">Explora las habitaciones disponibles y realiza tu reserva</div>
-                        <a href="/rooms-list.html" class="btn btn-primary mt-2">Ver habitaciones</a>
-                    </div>
+            <div class="reservation-status-card">
+                <div class="empty-state" style="padding:1.5rem">
+                    <div class="empty-state-icon">📅</div>
+                    <div class="empty-state-title">Aun no tienes reserva</div>
+                    <div class="empty-state-desc">Explora las habitaciones disponibles y realiza tu reserva</div>
+                    <a href="/rooms-list.html" class="btn btn-primary mt-2">Ver habitaciones</a>
+                </div>
+            </div>`;
+        // Intentar mostrar historial si el usuario ha tenido reservas antes
+        loadAndShowHistory();
+    }
+
+    // ---- Sistema de estrellas ----
+
+    function setStars(n) {
+        selectedStars = n;
+        updateStarDisplay(n);
+    }
+
+    function hoverStars(n) {
+        updateStarDisplay(n);
+    }
+
+    function resetStars() {
+        updateStarDisplay(selectedStars);
+    }
+
+    function updateStarDisplay(n) {
+        const stars = document.querySelectorAll('#star-rating .star');
+        stars.forEach((s, i) => {
+            s.classList.toggle('active', i < n);
+        });
+    }
+
+    async function submitReview(reservationId, roomNumber) {
+        if (selectedStars === 0) {
+            showAlert('review-alert', 'Selecciona al menos una estrella.', 'danger');
+            return;
+        }
+
+        const comment = document.getElementById('review-comment')?.value.trim() || '';
+        const btn     = document.getElementById('btn-submit-review');
+
+        setLoading(btn, true);
+        clearAlert('review-alert');
+
+        try {
+            await apiPost(`/Rooms/${roomNumber}/reviews`, {
+                reservationId,
+                stars:   selectedStars,
+                comment
+            });
+
+            document.getElementById('review-section').innerHTML = `
+                <div class="review-submitted">
+                    ✅ ¡Gracias por tu resena! Tu opinion ayuda a otros huespedes.
                 </div>`;
+
+            // Marcar en localStorage que ya se hizo la reseña para esta reserva
+            localStorage.setItem(reviewedKey(reservationId), '1');
+
+            // Limpiar flag hasReserved en localStorage para que el sistema sepa
+            // que puede hacer una nueva reserva (la estadia ya termino y fue evaluada)
+            const u = getUser();
+            if (u) {
+                u.hasReserved    = false;
+                u.reservedRoomId = null;
+                u.reservedDates  = null;
+                localStorage.setItem('probook_user', JSON.stringify(u));
+            }
+            // Asegurar que el sidebar y la accion rapida esten visibles
+            setSidebarNoReservation();
+            document.getElementById('action-reserve').style.display = '';
+
+        } catch (error) {
+            const msg = (error.message || '').toLowerCase();
+            // Si el backend rechaza porque ya existe la reseña, ocultar formulario
+            if (msg.includes('ya dejaste') || msg.includes('ya existe') || msg.includes('ya dej')) {
+                localStorage.setItem(reviewedKey(reservationId), '1');
+                document.getElementById('review-section').innerHTML = `
+                    <div class="review-submitted">
+                        ✅ Ya dejaste tu resena para esta estadía. ¡Gracias!
+                    </div>`;
+            } else {
+                showAlert('review-alert', error.message || 'Error al publicar la resena.', 'danger');
+            }
+        } finally {
+            setLoading(btn, false);
+        }
+    }
+
+    // ---- Historial de estadías ----
+
+    let historyLoaded = false;
+    let historyOpen   = false;
+
+    async function loadAndShowHistory() {
+        const section = document.getElementById('history-section');
+        if (!section) return;
+        section.style.display = '';
+
+        if (historyLoaded) return; // ya cargado
+
+        try {
+            const data = await apiGet('/Reservations/my-history');
+            const reservations = data.reservations || [];
+
+            // Excluir la reserva más reciente si ya aparece en la sección principal
+            // (para no duplicarla si aún está activa o en "última estadía")
+            const history = reservations.slice(0); // todas — el backend las ordena desc
+
+            renderHistory(history);
+            historyLoaded = true;
+        } catch (err) {
+            document.getElementById('history-list').innerHTML =
+                '<div class="history-empty">No se pudo cargar el historial.</div>';
+        }
+    }
+
+    async function renderHistory(reservations) {
+        const list = document.getElementById('history-list');
+        if (!list) return;
+
+        if (!reservations.length) {
+            list.innerHTML = '<div class="history-empty">Aún no tienes estadías registradas.</div>';
+            return;
+        }
+
+        // Para cada reserva, verificar si ya fue evaluada
+        const reviewChecks = await Promise.all(
+            reservations.map(async r => {
+                // Primero localStorage
+                if (localStorage.getItem(reviewedKey(r.id))) return true;
+                // Solo verificar en backend si la estadía ya terminó
+                const parts = r.checkOutDate.split('-');
+                const checkOut = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00Z`);
+                const now = new Date(Date.now() - 6 * 60 * 60 * 1000);
+                if (checkOut >= now) return null; // aún activa
+                try {
+                    await apiGet(`/Reservations/${r.id}/has-review`);
+                    localStorage.setItem(reviewedKey(r.id), '1');
+                    return true;
+                } catch { return false; }
+            })
+        );
+
+        const hondurasNow = new Date(Date.now() - 6 * 60 * 60 * 1000);
+
+        list.innerHTML = reservations.map((r, i) => {
+            const parts    = r.checkOutDate.split('-');
+            const checkOut = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00Z`);
+            const hasEnded = checkOut < hondurasNow;
+            const isCancelled = r.status === 'cancelled';
+            const reviewed = reviewChecks[i];
+
+            let reviewBadge = '';
+            if (hasEnded && !isCancelled) {
+                if (reviewed === true) {
+                    reviewBadge = '<span class="history-reviewed">✅ Evaluada</span>';
+                } else if (reviewed === false) {
+                    reviewBadge = `<button class="btn btn-outline btn-sm" style="font-size:0.72rem;padding:0.2rem 0.65rem"
+                        onclick="scrollToReviewOrLoad('${r.id}','${r.roomNumber}','${r.checkOutDate}')">
+                        ⭐ Evaluar estadía
+                    </button>`;
+                }
+            }
+
+            return `
+            <div class="history-item">
+                <div>
+                    <div class="history-item-room">Hab. ${r.roomNumber}
+                        <span style="font-size:0.78rem;font-weight:400;color:var(--text-muted)"> — ${r.roomType}</span>
+                    </div>
+                    <div class="history-item-dates">
+                        ${formatDate(r.checkInDate)} → ${formatDate(r.checkOutDate)}
+                    </div>
+                </div>
+                <div>
+                    <div class="history-item-cost">${formatCurrency(r.totalCost)}</div>
+                    <div class="history-item-nights">${r.nights} noche${r.nights !== 1 ? 's' : ''}</div>
+                </div>
+                <div class="history-item-status">
+                    ${getStatusBadge(isCancelled ? 'cancelled' : hasEnded ? 'completed' : r.status)}
+                    <span style="font-size:0.72rem;color:var(--text-muted)">${r.timestamp || ''}</span>
+                    ${reviewBadge}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function toggleHistory() {
+        historyOpen = !historyOpen;
+        const list = document.getElementById('history-list');
+        const icon = document.getElementById('history-toggle-icon');
+        if (list) list.classList.toggle('open', historyOpen);
+        if (icon) icon.classList.toggle('open', historyOpen);
+        if (historyOpen && !historyLoaded) loadAndShowHistory();
+    }
+
+    function scrollToReviewOrLoad(reservationId, roomNumber, checkOutDate) {
+        // Si la reserva es la más reciente y el formulario de reseña está en pantalla, hacer scroll
+        const reviewSection = document.getElementById('review-section');
+        if (reviewSection) {
+            reviewSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        // Si no hay sección de reseña visible (no es la reserva actual), no se puede evaluar desde aquí
+        // En el futuro se puede expandir para mostrar modal de reseña por reserva histórica
+    }
+
+    // ---- Cancelar reserva ----
+
+    function openCancel() {
+        document.getElementById('modal-cancel').classList.add('active');
+    }
+
+    function closeCancel() {
+        document.getElementById('modal-cancel').classList.remove('active');
+    }
+
+    async function executeCancel() {
+        if (!currentReservation) return;
+        const btn = document.getElementById('btn-confirm-cancel');
+        setLoading(btn, true);
+
+        try {
+            await apiPut(`/Reservations/${currentReservation.id}/cancel-guest`, {});
+
+            const user = getUser();
+            user.hasReserved    = false;
+            user.reservedRoomId = null;
+            user.reservedDates  = null;
+            localStorage.setItem('probook_user', JSON.stringify(user));
+
+            closeCancel();
+            showAlert('alert-container', 'Reserva cancelada exitosamente. Ya puedes realizar una nueva reserva.', 'success');
+            currentReservation = null;
+            renderNoReservation();
+
+            setSidebarNoReservation();
+            document.getElementById('action-reserve').style.display = '';
+
+        } catch (error) {
+            closeCancel();
+            showAlert('alert-container', error.message || 'Error al cancelar la reserva.', 'danger');
+        } finally {
+            setLoading(btn, false);
+        }
+    }
+
+    // ---- Modificar fechas ----
+
+    function openModify(checkIn, checkOut) {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('modify-checkin').min  = today;
+        document.getElementById('modify-checkout').min = today;
+        document.getElementById('modify-checkin').value  = apiDateToInput(checkIn);
+        document.getElementById('modify-checkout').value = apiDateToInput(checkOut);
+        document.getElementById('modify-availability').textContent = '';
+        clearAlert('modify-alert');
+        document.getElementById('modal-modify').classList.add('active');
+    }
+
+    function closeModify() {
+        document.getElementById('modal-modify').classList.remove('active');
+    }
+
+    let modifyAvailTimer = null;
+
+    async function checkModifyAvailability() {
+        const checkIn  = document.getElementById('modify-checkin').value;
+        const checkOut = document.getElementById('modify-checkout').value;
+        const avail    = document.getElementById('modify-availability');
+
+        if (!checkIn || !checkOut || checkIn >= checkOut || !currentReservation) {
+            avail.textContent = '';
+            return;
+        }
+
+        avail.textContent = '⟳ Verificando disponibilidad...';
+        avail.style.color = 'var(--primary)';
+
+        clearTimeout(modifyAvailTimer);
+        modifyAvailTimer = setTimeout(async () => {
+            try {
+                const result = await apiGet(
+                    `/Rooms/available?roomNumber=${currentReservation.roomNumber}&checkIn=${inputDateToApi(checkIn)}&checkOut=${inputDateToApi(checkOut)}&excludeReservationId=${currentReservation.id}`
+                );
+                if (result.available) {
+                    avail.textContent = '✓ Disponible en esas fechas';
+                    avail.style.color = 'var(--success)';
+                } else {
+                    avail.textContent = '✗ No disponible — elige otras fechas';
+                    avail.style.color = 'var(--danger)';
+                }
+            } catch {
+                avail.textContent = '';
+            }
+        }, 600);
+    }
+
+    async function confirmModify() {
+        if (!currentReservation) return;
+
+        const checkIn  = document.getElementById('modify-checkin').value;
+        const checkOut = document.getElementById('modify-checkout').value;
+        const btn      = document.getElementById('btn-confirm-modify');
+
+        clearAlert('modify-alert');
+
+        if (!checkIn || !checkOut) {
+            showAlert('modify-alert', 'Selecciona ambas fechas.');
+            return;
+        }
+
+        if (checkIn >= checkOut) {
+            showAlert('modify-alert', 'La fecha de salida debe ser posterior a la entrada.');
+            return;
+        }
+
+        setLoading(btn, true);
+
+        try {
+            await apiPut(`/Reservations/${currentReservation.id}/modify`, {
+                checkInDate:  inputDateToApi(checkIn),
+                checkOutDate: inputDateToApi(checkOut)
+            });
+
+            closeModify();
+            showAlert('alert-container', 'Fechas actualizadas correctamente.', 'success');
+            await loadReservation();
+
+        } catch (error) {
+            showAlert('modify-alert', error.message || 'Error al modificar las fechas.');
+        } finally {
+            setLoading(btn, false);
+        }
     }
 </script>
+<div id="change-pwd-modal-root"></div>
 </body>
 </html>

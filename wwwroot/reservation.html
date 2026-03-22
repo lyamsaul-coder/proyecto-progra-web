@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProBook - Reservar Habitacion</title>
     <link rel="stylesheet" href="/css/styles.css">
@@ -60,7 +63,6 @@
         }
 
         .summary-row:last-of-type { border-bottom: none; }
-
         .summary-row-label { color: var(--text-muted); }
         .summary-row-value { font-weight: 600; color: var(--text); }
 
@@ -74,10 +76,7 @@
             align-items: center;
         }
 
-        .summary-total-label {
-            font-weight: 700;
-            color: var(--text);
-        }
+        .summary-total-label { font-weight: 700; color: var(--text); }
 
         .summary-total-value {
             font-family: var(--font-display);
@@ -86,15 +85,41 @@
             color: var(--primary);
         }
 
-        .warning-card {
-            background: rgba(230, 126, 34, 0.06);
-            border: 1px solid rgba(230, 126, 34, 0.2);
+        .policy-card {
+            background: rgba(44, 95, 138, 0.05);
+            border: 1px solid rgba(44, 95, 138, 0.2);
             border-radius: var(--radius-sm);
             padding: 0.85rem 1rem;
             font-size: 0.82rem;
-            color: var(--warning);
+            color: var(--text-muted);
             margin-top: 1rem;
-            line-height: 1.5;
+            line-height: 1.6;
+        }
+
+        .policy-card strong { color: var(--text); }
+
+        .availability-badge {
+            display: inline-block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            margin-top: 0.4rem;
+        }
+
+        .availability-ok {
+            background: rgba(46, 125, 94, 0.1);
+            color: var(--success);
+        }
+
+        .availability-no {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--danger);
+        }
+
+        .availability-checking {
+            background: rgba(44, 95, 138, 0.1);
+            color: var(--primary);
         }
 
         @media (max-width: 768px) {
@@ -102,25 +127,18 @@
             .summary-card { position: static; }
         }
 
-        [data-theme="dark"] .summary-card {
-            background: #1A1D26 !important;
-            border-color: #2A2D3A;
-        }
-        [data-theme="dark"] .summary-label { color: #A0A8B8; }
-        [data-theme="dark"] .summary-value { color: #E8EAF0; }
-        [data-theme="dark"] .cost-breakdown { background: #0F1117; border-color: #2A2D3A; }
+        [data-theme="dark"] .summary-card { background: #1A1D26 !important; border-color: #2A2D3A; }
+        [data-theme="dark"] .policy-card { background: rgba(74,144,196,0.06); border-color: rgba(74,144,196,0.2); }
     </style>
 </head>
 <body>
 
-<!-- Navbar -->
 <nav class="navbar">
     <a href="/guest-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
     <div id="nav-user" class="navbar-user"></div>
 </nav>
 
 <div class="layout">
-    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-section">
             <div class="sidebar-label">Mi cuenta</div>
@@ -134,7 +152,6 @@
         </div>
     </aside>
 
-    <!-- Contenido -->
     <main class="main-content">
         <div class="page-header">
             <h1 class="page-title">Realizar reserva</h1>
@@ -144,7 +161,6 @@
         <div id="alert-container"></div>
 
         <div class="reservation-layout">
-            <!-- Formulario -->
             <div>
                 <div class="card">
                     <div class="card-header">
@@ -173,10 +189,16 @@
                         </div>
                     </div>
 
-                    <div class="warning-card">
-                        ⚠️ <strong>Importante:</strong> Solo puedes realizar <strong>una reserva</strong>.
-                        Una vez confirmada no puede modificarse ni cancelarse.
-                        Verifica bien los datos antes de confirmar.
+                    <!-- Indicador de disponibilidad en tiempo real -->
+                    <div id="availability-indicator" style="margin-bottom:1rem; display:none;">
+                        <span id="availability-text" class="availability-badge"></span>
+                    </div>
+
+                    <!-- Politica real de cancelacion -->
+                    <div class="policy-card">
+                        <strong>Politica de cancelacion:</strong> puedes cancelar tu reserva con al menos
+                        <strong>24 horas de anticipacion</strong> al check-in sin costo adicional.
+                        Cancelaciones con menos de 24 horas solo pueden procesarlas en recepcion.
                     </div>
 
                     <div style="margin-top:1.5rem">
@@ -232,19 +254,62 @@
     requireAuth('guest');
     renderNavbar('guest');
 
-    // Si ya reservo, redirigir a already-reserved
     const user = getUser();
+
+    // ── Verificación de reserva activa ─────────────────────────────────────
+    // Primero chequeo rápido por fecha desde localStorage (síncrono, sin red)
     if (user?.hasReserved) {
-        window.location.href = '/already-reserved.html';
+        const dates = user.reservedDates || '';
+        const match = dates.match(/\d{2}-\d{2}-\d{4}.*?(\d{2})-(\d{2})-(\d{4})$/);
+        let locallyExpired = false;
+        if (match) {
+            const checkOutLocal = new Date(`${match[3]}-${match[2]}-${match[1]}T00:00:00Z`);
+            const hondurasNow   = new Date(Date.now() - 6 * 60 * 60 * 1000);
+            locallyExpired = checkOutLocal < hondurasNow;
+        }
+
+        if (locallyExpired) {
+            // Expirada según localStorage — limpiar y permitir reservar
+            user.hasReserved    = false;
+            user.reservedRoomId = null;
+            user.reservedDates  = null;
+            localStorage.setItem('probook_user', JSON.stringify(user));
+        } else {
+            // Podría estar activa — verificar con el backend para estar seguros
+            (async () => {
+                try {
+                    const r = await apiGet('/Reservations/my');
+                    const parts       = r.checkOutDate.split('-');
+                    const checkOutUTC = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00Z`);
+                    const hondurasNow = new Date(Date.now() - 6 * 60 * 60 * 1000);
+                    const hasExpired  = checkOutUTC < hondurasNow;
+                    const isCancelled = r.status === 'cancelled';
+
+                    if (!hasExpired && !isCancelled) {
+                        window.location.href = '/already-reserved.html';
+                    } else {
+                        user.hasReserved    = false;
+                        user.reservedRoomId = null;
+                        user.reservedDates  = null;
+                        localStorage.setItem('probook_user', JSON.stringify(user));
+                    }
+                } catch {
+                    user.hasReserved    = false;
+                    user.reservedRoomId = null;
+                    user.reservedDates  = null;
+                    localStorage.setItem('probook_user', JSON.stringify(user));
+                }
+            })();
+        }
     }
 
     // Leer parametros de la URL si vienen de rooms-list
     const params = new URLSearchParams(window.location.search);
-    const roomFromUrl = params.get('roomNumber');
+    const roomFromUrl    = params.get('roomNumber');
     const checkInFromUrl = params.get('checkIn');
     const checkOutFromUrl = params.get('checkOut');
 
-    if (roomFromUrl) document.getElementById('room-number').value = roomFromUrl;
+    if (roomFromUrl)    document.getElementById('room-number').value = roomFromUrl;
     if (checkInFromUrl) document.getElementById('check-in').value = apiDateToInput(checkInFromUrl);
     if (checkOutFromUrl) document.getElementById('check-out').value = apiDateToInput(checkOutFromUrl);
 
@@ -256,21 +321,20 @@
         document.getElementById('check-out').min = this.value;
     });
 
-    // Actualizar resumen al cargar si vienen datos de URL
     if (roomFromUrl || checkInFromUrl) updateSummary();
 
-    // Guardar tarifa base de la habitacion consultada
     let currentBaseRate = null;
+    let availabilityOk = false;
+    let checkAvailabilityTimer = null;
 
     async function updateSummary() {
         const roomNumber = document.getElementById('room-number').value.trim();
-        const checkIn = document.getElementById('check-in').value;
-        const checkOut = document.getElementById('check-out').value;
+        const checkIn    = document.getElementById('check-in').value;
+        const checkOut   = document.getElementById('check-out').value;
 
         document.getElementById('sum-room-number').textContent =
             roomNumber ? `Hab. ${roomNumber}` : '---';
 
-        // Consultar tarifa de la habitacion si tiene numero
         if (roomNumber && roomNumber.length >= 1) {
             try {
                 const room = await apiGet(`/Rooms/${roomNumber}`);
@@ -293,34 +357,84 @@
             document.getElementById('sum-checkout').textContent = formatDate(inputDateToApi(checkOut));
             document.getElementById('sum-nights').textContent = `${nights} noche${nights !== 1 ? 's' : ''}`;
 
-            // Calcular costos si tenemos la tarifa
             if (currentBaseRate && nights > 0) {
-                const base = currentBaseRate * nights;
-                const tax = base * 0.15;
+                const base  = currentBaseRate * nights;
+                const tax   = base * 0.15;
                 const total = base + tax;
                 document.getElementById('sum-base').textContent = formatCurrency(base);
                 document.getElementById('sum-tax').textContent = formatCurrency(tax);
                 document.getElementById('sum-total').textContent = formatCurrency(total);
             } else {
-                document.getElementById('sum-base').textContent = '--';
-                document.getElementById('sum-tax').textContent = '--';
-                document.getElementById('sum-total').textContent = '--';
+                clearCosts();
             }
+
+            // Verificar disponibilidad en tiempo real con debounce
+            if (roomNumber && currentBaseRate) {
+                clearTimeout(checkAvailabilityTimer);
+                showAvailability('checking', 'Verificando disponibilidad...');
+                checkAvailabilityTimer = setTimeout(() => checkAvailability(roomNumber, checkIn, checkOut), 600);
+            }
+
         } else {
             document.getElementById('sum-checkin').textContent = '--';
             document.getElementById('sum-checkout').textContent = '--';
             document.getElementById('sum-nights').textContent = '--';
-            document.getElementById('sum-base').textContent = '--';
-            document.getElementById('sum-tax').textContent = '--';
-            document.getElementById('sum-total').textContent = '--';
+            clearCosts();
+            hideAvailability();
         }
+    }
+
+    async function checkAvailability(roomNumber, checkIn, checkOut) {
+        try {
+            // Usamos el endpoint de rooms que ya existe para obtener la habitacion
+            // La disponibilidad real la valida el backend al confirmar,
+            // pero hacemos una consulta previa para informar al usuario
+            const checkInApi  = inputDateToApi(checkIn);
+            const checkOutApi = inputDateToApi(checkOut);
+
+            const result = await apiGet(
+                `/Rooms/available?roomNumber=${roomNumber}&checkIn=${checkInApi}&checkOut=${checkOutApi}`
+            );
+
+            if (result.available) {
+                availabilityOk = true;
+                showAvailability('ok', 'Habitacion disponible en esas fechas');
+            } else {
+                availabilityOk = false;
+                showAvailability('no', 'No disponible en esas fechas — elige otras');
+            }
+        } catch {
+            // Si el endpoint no existe aun, ocultar el indicador y dejar que el backend valide
+            availabilityOk = true;
+            hideAvailability();
+        }
+    }
+
+    function showAvailability(type, text) {
+        const indicator = document.getElementById('availability-indicator');
+        const badge = document.getElementById('availability-text');
+        indicator.style.display = 'block';
+        badge.textContent = type === 'ok' ? '✓ ' + text :
+            type === 'no' ? '✗ ' + text : '⟳ ' + text;
+        badge.className = 'availability-badge availability-' + type;
+    }
+
+    function hideAvailability() {
+        document.getElementById('availability-indicator').style.display = 'none';
+        availabilityOk = false;
+    }
+
+    function clearCosts() {
+        document.getElementById('sum-base').textContent = '--';
+        document.getElementById('sum-tax').textContent = '--';
+        document.getElementById('sum-total').textContent = '--';
     }
 
     async function handleReservation() {
         const roomNumber = document.getElementById('room-number').value.trim();
-        const checkIn = document.getElementById('check-in').value;
-        const checkOut = document.getElementById('check-out').value;
-        const btn = document.getElementById('btn-reserve');
+        const checkIn    = document.getElementById('check-in').value;
+        const checkOut   = document.getElementById('check-out').value;
+        const btn        = document.getElementById('btn-reserve');
 
         clearAlert('alert-container');
 
@@ -339,18 +453,16 @@
         try {
             const response = await apiPost('/Reservations', {
                 roomNumber,
-                checkInDate: inputDateToApi(checkIn),
+                checkInDate:  inputDateToApi(checkIn),
                 checkOutDate: inputDateToApi(checkOut)
             });
 
-            // Actualizar datos del usuario en localStorage
             const user = getUser();
-            user.hasReserved = true;
+            user.hasReserved    = true;
             user.reservedRoomId = response.reservation.roomId;
-            user.reservedDates = `${response.reservation.checkInDate} - ${response.reservation.checkOutDate}`;
+            user.reservedDates  = `${response.reservation.checkInDate} - ${response.reservation.checkOutDate}`;
             localStorage.setItem('probook_user', JSON.stringify(user));
 
-            // Redirigir a confirmacion con datos
             localStorage.setItem('last_reservation', JSON.stringify(response));
             window.location.href = '/reservation-confirmation.html';
 

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProBook - Configuracion</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            max-width: 860px;
+        }
+        @media (max-width: 700px) { .settings-grid { grid-template-columns: 1fr; } }
+
+        .settings-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .settings-card-header {
+            padding: 1.25rem 1.5rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .settings-card-icon {
+            width: 38px; height: 38px;
+            border-radius: var(--radius-sm);
+            background: rgba(44,95,138,0.1);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; flex-shrink: 0;
+        }
+
+        .settings-card-title {
+            font-family: var(--font-display);
+            font-size: 1rem; font-weight: 700; color: var(--text);
+        }
+
+        .settings-card-desc {
+            font-size: 0.78rem; color: var(--text-muted); margin-top: 0.1rem;
+        }
+
+        .settings-card-body { padding: 1.25rem 1.5rem; }
+
+        /* Preview badge */
+        .currency-preview {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: rgba(44,95,138,0.07);
+            border: 1px solid rgba(44,95,138,0.18);
+            border-radius: 20px;
+            padding: 0.35rem 1rem;
+            font-size: 0.9rem; font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1.25rem;
+            transition: var(--transition);
+        }
+
+        .currency-preview-label {
+            font-size: 0.72rem; font-weight: 500;
+            color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Tax slider */
+        .tax-slider-wrap { position: relative; }
+        .tax-display {
+            font-family: var(--font-display);
+            font-size: 2rem; font-weight: 700;
+            color: var(--primary); line-height: 1;
+            margin-bottom: 0.35rem;
+        }
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%; height: 6px;
+            border-radius: 3px;
+            background: var(--border);
+            outline: none; margin: 0.5rem 0;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(44,95,138,0.3);
+        }
+
+        /* Currency presets */
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .preset-btn {
+            padding: 0.6rem 0.4rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg);
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition);
+            font-size: 0.8rem;
+        }
+
+        .preset-btn:hover { border-color: var(--primary); background: rgba(44,95,138,0.05); }
+        .preset-btn.active { border-color: var(--primary); background: rgba(44,95,138,0.1); color: var(--primary); font-weight: 700; }
+        .preset-btn .preset-symbol { font-size: 1rem; font-weight: 700; display: block; margin-bottom: 0.1rem; }
+        .preset-btn .preset-name { font-size: 0.68rem; color: var(--text-muted); }
+        .preset-btn.active .preset-name { color: var(--primary); }
+
+        /* Full-width card */
+        .settings-card-full { grid-column: 1 / -1; }
+
+        /* Save state */
+        .save-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .save-hint { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* Dark mode */
+        [data-theme="dark"] .settings-card { background: #1A1D26; border-color: #2A2D3A; }
+        [data-theme="dark"] .settings-card-header { border-color: #2A2D3A; }
+        [data-theme="dark"] .settings-card-icon { background: rgba(74,144,196,0.12); }
+        [data-theme="dark"] .preset-btn { background: #12141c; border-color: #2A2D3A; color: #E8EAF0; }
+        [data-theme="dark"] .preset-btn:hover { border-color: #4A90C4; }
+        [data-theme="dark"] .preset-btn.active { border-color: #4A90C4; background: rgba(74,144,196,0.15); }
+        [data-theme="dark"] .save-bar { background: #12141c; border-color: #2A2D3A; }
+        [data-theme="dark"] input[type=range] { background: #2A2D3A; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/manager-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
+    <div id="nav-user" class="navbar-user"></div>
+</nav>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Principal</div>
+            <a href="/manager-dashboard.html" class="sidebar-link">📊 Dashboard</a>
+            <a href="/room-management.html"   class="sidebar-link">🏨 Habitaciones</a>
+            <a href="/guest-list.html"        class="sidebar-link">👥 Huespedes</a>
+            <a href="/reports.html"           class="sidebar-link">📈 Reportes</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">Sistema</div>
+            <a href="/settings.html" class="sidebar-link active">⚙️ Configuracion</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">Cuenta</div>
+            <button class="sidebar-link" onclick="logout()">🚪 Cerrar sesion</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Configuracion</h1>
+            <p class="page-subtitle">Ajustes globales del sistema ProBook</p>
+        </div>
+
+        <div id="alert-container" style="margin-bottom:1rem"></div>
+
+        <div class="settings-grid">
+
+            <!-- Presets de moneda -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">💱</div>
+                    <div>
+                        <div class="settings-card-title">Moneda</div>
+                        <div class="settings-card-desc">Selecciona o personaliza la moneda del sistema</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div style="margin-bottom:0.6rem">
+                        <div class="currency-preview-label">Vista previa</div>
+                        <div class="currency-preview" id="currency-preview">L. 1,250.00</div>
+                    </div>
+
+                    <div class="preset-grid" id="preset-grid">
+                        <button class="preset-btn" onclick="applyPreset('L.','HNL','es-HN','Lempira')">
+                            <span class="preset-symbol">L.</span>
+                            <span class="preset-name">Lempira HN</span>
+                        </button>
+                        <button class="preset-btn" onclick="applyPreset('$','USD','en-US','Dólar USD')">
+                            <span class="preset-symbol">$</span>
+                            <span class="preset-name">Dólar USD</span>
+                        </button>
+                        <button class="preset-btn" onclick="applyPreset('€','EUR','es-ES','Euro')">
+                            <span class="preset-symbol">€</span>
+                            <span class="preset-name">Euro</span>
+                        </button>
+                        <button class="preset-btn" onclick="applyPreset('Q','GTQ','es-GT','Quetzal GT')">
+                            <span class="preset-symbol">Q</span>
+                            <span class="preset-name">Quetzal GT</span>
+                        </button>
+                        <button class="preset-btn" onclick="applyPreset('C$','NIO','es-NI','Córdoba NI')">
+                            <span class="preset-symbol">C$</span>
+                            <span class="preset-name">Córdoba NI</span>
+                        </button>
+                        <button class="preset-btn" onclick="applyPreset('₡','CRC','es-CR','Colón CR')">
+                            <span class="preset-symbol">₡</span>
+                            <span class="preset-name">Colón CR</span>
+                        </button>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0.75rem">
+                        <label class="form-label">Símbolo personalizado</label>
+                        <input type="text" id="currency-symbol" class="form-control"
+                               placeholder="Ej: L., $, €" maxlength="5"
+                               oninput="updatePreview()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0">
+                        <label class="form-label">Código ISO (opcional)</label>
+                        <input type="text" id="currency-code" class="form-control"
+                               placeholder="Ej: HNL, USD, EUR" maxlength="5"
+                               oninput="updatePreview()">
+                    </div>
+                </div>
+                <div class="save-bar">
+                    <span class="save-hint" id="currency-locale-hint"></span>
+                    <input type="hidden" id="currency-locale" value="es-HN">
+                    <input type="hidden" id="currency-name" value="Lempira hondureño">
+                </div>
+            </div>
+
+            <!-- Impuesto -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">🧾</div>
+                    <div>
+                        <div class="settings-card-title">Impuesto (ISV / IVA)</div>
+                        <div class="settings-card-desc">Porcentaje aplicado al total de cada reserva</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="tax-display"><span id="tax-display">15</span>%</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem">
+                        Sobre una noche de <strong id="tax-base-example">L. 1,000.00</strong>
+                        el impuesto sería <strong id="tax-amount-example" style="color:var(--primary)">L. 150.00</strong>
+                    </div>
+                    <input type="range" id="tax-slider" min="0" max="30" step="1" value="15"
+                           oninput="updateTaxDisplay(this.value)">
+                    <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-muted)">
+                        <span>0%</span><span>15%</span><span>30%</span>
+                    </div>
+
+                    <div class="form-group" style="margin-top:1.25rem;margin-bottom:0">
+                        <label class="form-label">O ingresa el valor exacto (%)</label>
+                        <input type="number" id="tax-input" class="form-control"
+                               min="0" max="100" step="0.5" value="15"
+                               oninput="updateTaxFromInput(this.value)"
+                               style="max-width:120px">
+                    </div>
+                </div>
+                <div class="save-bar">
+                    <span class="save-hint">Afecta todos los cálculos futuros</span>
+                </div>
+            </div>
+
+        </div><!-- end settings-grid -->
+
+        <!-- Botón guardar -->
+        <div style="margin-top:1.5rem;max-width:860px">
+            <button id="btn-save" class="btn btn-primary btn-lg" onclick="saveSettings()">
+                Guardar configuracion
+            </button>
+            <span id="save-status" style="margin-left:1rem;font-size:0.85rem;color:var(--text-muted)"></span>
+        </div>
+
+    </main>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+    requireAuth('manager');
+    renderNavbar('manager');
+
+    let currentTaxRate = 0.15;
+
+    // Cargar configuración actual al entrar
+    loadSettings();
+
+    async function loadSettings() {
+        try {
+            const data = await apiGet('/Settings/currency');
+            // Aplicar al formulario
+            document.getElementById('currency-symbol').value = data.symbol || 'L.';
+            document.getElementById('currency-code').value   = data.code   || 'HNL';
+            document.getElementById('currency-locale').value = data.locale || 'es-HN';
+            document.getElementById('currency-name').value   = data.name   || 'Lempira hondureño';
+
+            const taxPct = Math.round((data.taxRate || 0.15) * 100);
+            currentTaxRate = data.taxRate || 0.15;
+            document.getElementById('tax-slider').value = taxPct;
+            document.getElementById('tax-input').value  = taxPct;
+            document.getElementById('tax-display').textContent = taxPct;
+
+            updatePreview();
+            updateTaxDisplay(taxPct);
+            markActivePreset(data.symbol);
+            updateLocaleHint(data.locale);
+        } catch (err) {
+            showAlert('alert-container', 'No se pudo cargar la configuración: ' + err.message, 'danger');
+        }
+    }
+
+    // ---- Presets ----
+
+    function applyPreset(symbol, code, locale, name) {
+        document.getElementById('currency-symbol').value = symbol;
+        document.getElementById('currency-code').value   = code;
+        document.getElementById('currency-locale').value = locale;
+        document.getElementById('currency-name').value   = name;
+        markActivePreset(symbol);
+        updatePreview();
+        updateLocaleHint(locale);
+    }
+
+    function markActivePreset(symbol) {
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            const btnSymbol = btn.querySelector('.preset-symbol')?.textContent.trim();
+            btn.classList.toggle('active', btnSymbol === symbol);
+        });
+    }
+
+    function updateLocaleHint(locale) {
+        const hints = {
+            'es-HN': 'Formato: 1.250,00',
+            'en-US': 'Format: 1,250.00',
+            'es-ES': 'Formato: 1.250,00',
+            'es-GT': 'Formato: 1.250,00',
+            'es-NI': 'Formato: 1.250,00',
+            'es-CR': 'Formato: 1.250,00',
+        };
+        document.getElementById('currency-locale-hint').textContent = hints[locale] || '';
+    }
+
+    // ---- Preview ----
+
+    function updatePreview() {
+        const symbol = document.getElementById('currency-symbol').value || 'L.';
+        const locale = document.getElementById('currency-locale').value || 'es-HN';
+        try {
+            const formatted = (1250).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('currency-preview').textContent = `${symbol} ${formatted}`;
+        } catch {
+            document.getElementById('currency-preview').textContent = `${symbol} 1,250.00`;
+        }
+    }
+
+    // ---- Tax ----
+
+    function updateTaxDisplay(pct) {
+        const n = parseFloat(pct) || 0;
+        currentTaxRate = n / 100;
+        document.getElementById('tax-display').textContent = n;
+        document.getElementById('tax-slider').value = Math.min(n, 30);
+        document.getElementById('tax-input').value  = n;
+
+        const symbol = document.getElementById('currency-symbol').value || 'L.';
+        const locale = document.getElementById('currency-locale').value || 'es-HN';
+        const base   = 1000;
+        const tax    = base * (n / 100);
+        try {
+            const fmtBase = base.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const fmtTax  = tax.toLocaleString(locale,  { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('tax-base-example').textContent   = `${symbol} ${fmtBase}`;
+            document.getElementById('tax-amount-example').textContent = `${symbol} ${fmtTax}`;
+        } catch { /* locale inválido */ }
+    }
+
+    function updateTaxFromInput(val) {
+        const n = Math.max(0, Math.min(100, parseFloat(val) || 0));
+        updateTaxDisplay(n);
+    }
+
+    // ---- Guardar ----
+
+    async function saveSettings() {
+        const symbol  = document.getElementById('currency-symbol').value.trim();
+        const code    = document.getElementById('currency-code').value.trim();
+        const locale  = document.getElementById('currency-locale').value.trim();
+        const name    = document.getElementById('currency-name').value.trim();
+        const taxPct  = parseFloat(document.getElementById('tax-input').value) || 15;
+        const taxRate = taxPct / 100;
+
+        if (!symbol) {
+            showAlert('alert-container', 'El símbolo de moneda es requerido.', 'danger');
+            return;
+        }
+
+        const btn = document.getElementById('btn-save');
+        setLoading(btn, true);
+        clearAlert('alert-container');
+
+        try {
+            await apiPut('/Settings/currency', { symbol, code, locale, taxRate, name });
+
+            // Actualizar el objeto global para que formatCurrency refleje el cambio inmediatamente
+            window._currency = { symbol, code, locale, taxRate, name };
+
+            document.getElementById('save-status').textContent = '✓ Guardado correctamente';
+            setTimeout(() => document.getElementById('save-status').textContent = '', 3000);
+
+            showAlert('alert-container',
+                `Configuración guardada: ${symbol} (${code || '—'}) · ISV ${taxPct}%`, 'success');
+        } catch (err) {
+            showAlert('alert-container', err.message || 'Error al guardar.', 'danger');
+        } finally {
+            setLoading(btn, false);
+        }
+    }
+</script>
+</body>
+</html>

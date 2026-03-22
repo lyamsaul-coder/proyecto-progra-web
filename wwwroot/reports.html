@@ -71,6 +71,114 @@
             margin-bottom: 1rem;
         }
 
+        /* ---- Tabs de reportes ---- */
+        .report-tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0;
+        }
+
+        .report-tab-btn {
+            padding: 0.65rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: color 0.2s, border-color 0.2s;
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+        }
+
+        .report-tab-btn:hover { color: var(--primary); }
+
+        .report-tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(44,95,138,0.05);
+        }
+
+        .report-tab-panel { display: none; }
+        .report-tab-panel.active { display: block; }
+
+        /* ---- Filtros historial ---- */
+        .hist-filters {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.25rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto auto;
+            gap: 0.75rem;
+            align-items: flex-end;
+            box-shadow: var(--shadow-sm);
+        }
+
+        @media (max-width: 900px) {
+            .hist-filters { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .hist-filters { grid-template-columns: 1fr; }
+        }
+
+        /* ---- Tabla historial ---- */
+        .hist-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .hist-count {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .hist-count strong { color: var(--text); }
+
+        .hist-export-btn {
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--success);
+            background: transparent;
+            color: var(--success);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .hist-export-btn:hover { background: var(--success); color: white; }
+
+        .hist-th-sort {
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .hist-th-sort:hover { color: var(--primary); }
+
+        .hist-sort-icon {
+            font-size: 0.68rem;
+            margin-left: 3px;
+            opacity: 0.4;
+        }
+
+        .hist-sort-icon.on { opacity: 1; }
+
+        th.hist-active { color: var(--primary); }
+
+        [data-theme="dark"] .hist-filters { background: #1A1D26; border-color: #2A2D3A; }
+        [data-theme="dark"] .report-tab-btn.active { background: rgba(74,144,196,0.08); }
+
         [data-theme="dark"] .chart-card {
             background: #1A1D26 !important;
             border-color: #2A2D3A;
@@ -119,6 +227,10 @@
             <a href="/reports.html" class="sidebar-link active">📈 Reportes</a>
         </div>
         <div class="sidebar-section">
+            <div class="sidebar-label">Sistema</div>
+            <a href="/settings.html" class="sidebar-link">⚙️ Configuracion</a>
+        </div>
+        <div class="sidebar-section">
             <div class="sidebar-label">Cuenta</div>
             <button class="sidebar-link" onclick="logout()">🚪 Cerrar sesion</button>
         </div>
@@ -129,102 +241,195 @@
         <div class="page-header">
             <div>
                 <h1 class="page-title">Reportes</h1>
-                <p class="page-subtitle">Visualizaciones y analisis de ocupacion e ingresos</p>
+                <p class="page-subtitle">Estadísticas, análisis e historial completo de reservas</p>
             </div>
             <button class="export-btn" id="export-btn" onclick="exportPdf()" disabled>
                 📄 Exportar PDF
             </button>
         </div>
 
-        <!-- Filtro de periodo -->
-        <div class="period-card">
-            <div class="form-group">
-                <label class="form-label">Fecha inicio</label>
-                <input type="date" id="period-start" class="form-control">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Fecha fin</label>
-                <input type="date" id="period-end" class="form-control">
-            </div>
-            <button class="btn btn-primary" onclick="loadReport()">Generar reporte</button>
-            <button class="btn btn-outline" onclick="clearFilter()">Ultimo mes</button>
+        <!-- Pestañas -->
+        <div class="report-tabs">
+            <button class="report-tab-btn active" onclick="switchTab('stats', this)">
+                📊 Estadísticas
+            </button>
+            <button class="report-tab-btn" onclick="switchTab('history', this)">
+                📋 Historial de reservas
+            </button>
         </div>
 
-        <!-- Stats resumen -->
-        <div class="stats-grid mb-3">
-            <div class="stat-card">
-                <div class="stat-label">Habitaciones</div>
-                <div class="stat-value" id="stat-rooms">--</div>
-                <div class="stat-desc">Total registradas</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Noches</div>
-                <div class="stat-value" id="stat-nights">--</div>
-                <div class="stat-desc">Reservadas en periodo</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Ocupacion</div>
-                <div class="stat-value" id="stat-occupancy">--</div>
-                <div class="stat-desc">Porcentaje del periodo</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Ingresos</div>
-                <div class="stat-value" id="stat-revenue">--</div>
-                <div class="stat-desc">Total generado</div>
-            </div>
-        </div>
+        <!-- Panel: Estadísticas -->
+        <div id="tab-stats" class="report-tab-panel active">
 
-        <div id="report-meta" class="report-meta"></div>
+            <!-- Filtro de periodo -->
+            <div class="period-card">
+                <div class="form-group">
+                    <label class="form-label">Fecha inicio</label>
+                    <input type="date" id="period-start" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fecha fin</label>
+                    <input type="date" id="period-end" class="form-control">
+                </div>
+                <button class="btn btn-primary" onclick="loadReport()">Generar reporte</button>
+                <button class="btn btn-outline" onclick="clearFilter()">Ultimo mes</button>
+            </div>
 
-        <!-- Graficos -->
-        <div class="charts-grid">
-            <div class="chart-card">
-                <div class="chart-title">Reservas por tipo de habitacion</div>
-                <div class="chart-subtitle">Cantidad de reservas segun el tipo</div>
-                <div class="chart-container">
-                    <canvas id="chart-bars"></canvas>
+            <!-- Stats resumen -->
+            <div class="stats-grid mb-3">
+                <div class="stat-card">
+                    <div class="stat-label">Habitaciones</div>
+                    <div class="stat-value" id="stat-rooms">--</div>
+                    <div class="stat-desc">Total registradas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Noches</div>
+                    <div class="stat-value" id="stat-nights">--</div>
+                    <div class="stat-desc">Reservadas en periodo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Ocupacion</div>
+                    <div class="stat-value" id="stat-occupancy">--</div>
+                    <div class="stat-desc">Porcentaje del periodo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Ingresos</div>
+                    <div class="stat-value" id="stat-revenue">--</div>
+                    <div class="stat-desc">Total generado</div>
                 </div>
             </div>
-            <div class="chart-card">
-                <div class="chart-title">Distribucion de ingresos</div>
-                <div class="chart-subtitle">Participacion por tipo de habitacion</div>
-                <div class="chart-container">
-                    <canvas id="chart-pie"></canvas>
-                </div>
-            </div>
-            <div class="chart-card chart-card-full">
-                <div class="chart-title">Tendencia de ocupacion temporal</div>
-                <div class="chart-subtitle">Reservas registradas por dia en el periodo</div>
-                <div class="chart-container">
-                    <canvas id="chart-line"></canvas>
-                </div>
-            </div>
-        </div>
 
-        <!-- Tabla de resultados -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Tabla de resultados por tipo de habitacion</h2>
+            <div id="report-meta" class="report-meta"></div>
+
+            <!-- Graficos -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-title">Reservas por tipo de habitacion</div>
+                    <div class="chart-subtitle">Cantidad de reservas segun el tipo</div>
+                    <div class="chart-container">
+                        <canvas id="chart-bars"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Distribucion de ingresos</div>
+                    <div class="chart-subtitle">Participacion por tipo de habitacion</div>
+                    <div class="chart-container">
+                        <canvas id="chart-pie"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card chart-card-full">
+                    <div class="chart-title">Tendencia de ocupacion temporal</div>
+                    <div class="chart-subtitle">Reservas registradas por dia en el periodo</div>
+                    <div class="chart-container">
+                        <canvas id="chart-line"></canvas>
+                    </div>
+                </div>
             </div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Tipo</th>
-                        <th>Reservas</th>
-                        <th>Ingresos</th>
-                        <th>Promedio por reserva</th>
-                        <th>Participacion</th>
-                    </tr>
-                    </thead>
-                    <tbody id="results-table">
-                    <tr><td colspan="5" class="text-center text-muted" style="padding:2rem">
-                        Genera un reporte para ver los resultados
-                    </td></tr>
-                    </tbody>
-                </table>
+
+            <!-- Tabla de resultados -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Tabla de resultados por tipo de habitacion</h2>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Reservas</th>
+                            <th>Ingresos</th>
+                            <th>Promedio por reserva</th>
+                            <th>Participacion</th>
+                        </tr>
+                        </thead>
+                        <tbody id="results-table">
+                        <tr><td colspan="5" class="text-center text-muted" style="padding:2rem">
+                            Genera un reporte para ver los resultados
+                        </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div><!-- end results card -->
+        </div><!-- end stats tab panel -->
+
+        <!-- Panel: Historial de reservas -->
+        <div id="tab-history" class="report-tab-panel">
+
+            <!-- Filtros -->
+            <div class="hist-filters">
+                <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label">Desde</label>
+                    <input type="date" id="hist-from" class="form-control" onchange="applyHistFilters()">
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label">Hasta</label>
+                    <input type="date" id="hist-to" class="form-control" onchange="applyHistFilters()">
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label">Estado</label>
+                    <select id="hist-status" class="form-control" onchange="applyHistFilters()">
+                        <option value="all">Todos</option>
+                        <option value="confirmed">Confirmada</option>
+                        <option value="cancelled">Cancelada</option>
+                        <option value="completed">Completada</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label">Buscar huésped / hab.</label>
+                    <input type="text" id="hist-search" class="form-control"
+                           placeholder="Nombre o número..." oninput="applyHistFilters()">
+                </div>
+                <div style="display:flex;gap:0.5rem;align-items:flex-end">
+                    <button class="btn btn-outline btn-sm" onclick="clearHistFilters()">Limpiar</button>
+                </div>
             </div>
-        </div>
+
+            <div class="hist-summary">
+                <div class="hist-count" id="hist-count">Cargando...</div>
+                <div style="display:flex;gap:0.5rem">
+                    <span id="hist-revenue-total" style="font-size:0.82rem;color:var(--text-muted)"></span>
+                    <button class="hist-export-btn" onclick="exportHistCsv()">⬇ Exportar CSV</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th class="hist-th-sort" onclick="histSortBy('userName')">
+                                Huésped <span class="hist-sort-icon" id="hsort-userName">↕</span>
+                            </th>
+                            <th class="hist-th-sort" onclick="histSortBy('roomNumber')">
+                                Hab. <span class="hist-sort-icon" id="hsort-roomNumber">↕</span>
+                            </th>
+                            <th>Tipo</th>
+                            <th class="hist-th-sort" onclick="histSortBy('checkInDate')">
+                                Check-in <span class="hist-sort-icon" id="hsort-checkInDate">↕</span>
+                            </th>
+                            <th class="hist-th-sort" onclick="histSortBy('checkOutDate')">
+                                Check-out <span class="hist-sort-icon" id="hsort-checkOutDate">↕</span>
+                            </th>
+                            <th class="hist-th-sort" onclick="histSortBy('nights')">
+                                Noches <span class="hist-sort-icon" id="hsort-nights">↕</span>
+                            </th>
+                            <th class="hist-th-sort" onclick="histSortBy('totalCost')">
+                                Total <span class="hist-sort-icon" id="hsort-totalCost">↕</span>
+                            </th>
+                            <th>Estado</th>
+                        </tr>
+                        </thead>
+                        <tbody id="hist-table-body">
+                        <tr><td colspan="8" class="text-center text-muted" style="padding:2rem">
+                            <span class="spinner spinner-primary"></span>
+                        </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div><!-- end history tab panel -->
+
     </main>
 </div>
 
@@ -661,6 +866,230 @@
             btn.innerHTML = '📄 Exportar PDF';
         }
     }
+
+    // ============================================================
+    // HISTORIAL DE RESERVAS
+    // ============================================================
+
+    let _allReservations = [];  // todas las reservas del backend
+    let _histFiltered    = [];  // después de filtros
+    let _histSortCol     = 'checkInDate';
+    let _histSortDir     = 'desc';
+    let _histLoaded      = false;
+
+    // ---- Tab switcher ----
+    function switchTab(tab, btn) {
+        document.querySelectorAll('.report-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.report-tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
+
+        if (tab === 'history' && !_histLoaded) loadHistory();
+    }
+
+    // ---- Cargar todas las reservas ----
+    async function loadHistory() {
+        // Mostrar spinner mientras carga
+        const tbody = document.getElementById('hist-table-body');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding:2rem"><span class="spinner spinner-primary"></span></td></tr>';
+        const countEl = document.getElementById('hist-count');
+        if (countEl) countEl.innerHTML = 'Cargando...';
+
+        try {
+            const data = await apiGet('/Reservations');
+            // El endpoint devuelve un array directamente (List<ReservationDto>)
+            _allReservations = Array.isArray(data) ? data : (data.reservations || []);
+            _histLoaded = true;
+            applyHistFilters();
+        } catch (err) {
+            if (tbody) tbody.innerHTML =
+                '<tr><td colspan="8" class="text-center text-muted" style="padding:2rem">⚠️ Error al cargar reservas: ' + err.message + '</td></tr>';
+            if (countEl) countEl.textContent = '';
+        }
+    }
+
+    // ---- Filtros ----
+    function applyHistFilters() {
+        const from   = document.getElementById('hist-from').value;
+        const to     = document.getElementById('hist-to').value;
+        const status = document.getElementById('hist-status').value;
+        const search = document.getElementById('hist-search').value.toLowerCase().trim();
+        const hondurasNow = new Date(Date.now() - 6 * 60 * 60 * 1000);
+
+        _histFiltered = _allReservations.filter(r => {
+            // Calcular estado efectivo (igual que en el dashboard)
+            const parts    = r.checkOutDate.split('-');
+            const checkOut = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00Z`);
+            const isCancelled = r.status === 'cancelled';
+            const isCompleted = !isCancelled && checkOut < hondurasNow;
+            const effectiveStatus = isCancelled ? 'cancelled' : isCompleted ? 'completed' : 'confirmed';
+
+            // Filtro estado
+            if (status !== 'all' && effectiveStatus !== status) return false;
+
+            // Filtro fechas — por fecha de check-in
+            if (from) {
+                const checkInParts = r.checkInDate.split('-');
+                const checkIn = new Date(`${checkInParts[2]}-${checkInParts[1]}-${checkInParts[0]}`);
+                const fromDate = new Date(from);
+                if (checkIn < fromDate) return false;
+            }
+            if (to) {
+                const checkInParts = r.checkInDate.split('-');
+                const checkIn = new Date(`${checkInParts[2]}-${checkInParts[1]}-${checkInParts[0]}`);
+                const toDate = new Date(to);
+                if (checkIn > toDate) return false;
+            }
+
+            // Filtro búsqueda
+            if (search) {
+                const matches =
+                    (r.userName  || '').toLowerCase().includes(search) ||
+                    (r.roomNumber || '').toLowerCase().includes(search) ||
+                    (r.roomType   || '').toLowerCase().includes(search);
+                if (!matches) return false;
+            }
+
+            return true;
+        });
+
+        histSortAndRender();
+    }
+
+    function clearHistFilters() {
+        document.getElementById('hist-from').value   = '';
+        document.getElementById('hist-to').value     = '';
+        document.getElementById('hist-status').value = 'all';
+        document.getElementById('hist-search').value = '';
+        applyHistFilters();
+    }
+
+    // ---- Ordenamiento ----
+    function histSortBy(col) {
+        if (_histSortCol === col) {
+            _histSortDir = _histSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            _histSortCol = col;
+            _histSortDir = col === 'checkInDate' || col === 'checkOutDate' ? 'desc' : 'asc';
+        }
+        histSortAndRender();
+    }
+
+    function histSortAndRender() {
+        const col = _histSortCol;
+        const dir = _histSortDir;
+
+        const sorted = [..._histFiltered].sort((a, b) => {
+            let va = a[col], vb = b[col];
+            if (va == null) return 1;
+            if (vb == null) return -1;
+
+            // Numérico
+            if (col === 'nights' || col === 'totalCost') {
+                return dir === 'asc' ? va - vb : vb - va;
+            }
+            // Fecha dd-MM-yyyy
+            if (col === 'checkInDate' || col === 'checkOutDate') {
+                const toTs = s => {
+                    const p = s.split('-');
+                    return new Date(`${p[2]}-${p[1]}-${p[0]}`).getTime();
+                };
+                return dir === 'asc' ? toTs(va) - toTs(vb) : toTs(vb) - toTs(va);
+            }
+            // Texto
+            va = String(va).toLowerCase();
+            vb = String(vb).toLowerCase();
+            return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+        });
+
+        // Actualizar iconos
+        document.querySelectorAll('.hist-sort-icon').forEach(el => {
+            el.textContent = '↕'; el.classList.remove('on');
+        });
+        document.querySelectorAll('.hist-th-sort').forEach(el => el.classList.remove('hist-active'));
+        const icon = document.getElementById('hsort-' + col);
+        if (icon) {
+            icon.textContent = dir === 'asc' ? '↑' : '↓';
+            icon.classList.add('on');
+            icon.closest('th')?.classList.add('hist-active');
+        }
+
+        renderHistTable(sorted);
+    }
+
+    // ---- Renderizar tabla ----
+    function renderHistTable(rows) {
+        const tbody = document.getElementById('hist-table-body');
+        const count = document.getElementById('hist-count');
+        const revEl = document.getElementById('hist-revenue-total');
+        const hondurasNow = new Date(Date.now() - 6 * 60 * 60 * 1000);
+
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:2rem">No hay reservas que coincidan con los filtros.</td></tr>';
+            if (count) count.innerHTML = '<strong>0</strong> reservas';
+            if (revEl) revEl.textContent = '';
+            return;
+        }
+
+        const totalRev = rows.reduce((sum, r) => sum + (r.totalCost || 0), 0);
+        if (count) count.innerHTML = `<strong>${rows.length}</strong> reserva${rows.length !== 1 ? 's' : ''}`;
+        if (revEl) revEl.textContent = 'Total: ' + formatCurrency(totalRev);
+
+        tbody.innerHTML = rows.map(r => {
+            const parts    = r.checkOutDate.split('-');
+            const checkOut = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00Z`);
+            const isCancelled = r.status === 'cancelled';
+            const isCompleted = !isCancelled && checkOut < hondurasNow;
+            const effStatus   = isCancelled ? 'cancelled' : isCompleted ? 'completed' : 'confirmed';
+
+            return `<tr>
+                <td><div style="font-weight:600;font-size:0.875rem">${r.userName || '—'}</div></td>
+                <td><strong>Hab. ${r.roomNumber}</strong></td>
+                <td style="font-size:0.82rem;color:var(--text-muted)">${r.roomType || '—'}</td>
+                <td style="font-size:0.85rem">${formatDate(r.checkInDate)}</td>
+                <td style="font-size:0.85rem">${formatDate(r.checkOutDate)}</td>
+                <td style="text-align:center">${r.nights}</td>
+                <td style="font-weight:600;color:var(--primary)">${formatCurrency(r.totalCost)}</td>
+                <td>${getStatusBadge(effStatus)}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    // ---- Exportar CSV ----
+    function exportHistCsv() {
+        if (!_histFiltered.length) { alert('No hay datos para exportar.'); return; }
+        const hondurasNow = new Date(Date.now() - 6 * 60 * 60 * 1000);
+
+        const headers = ['Huesped','Habitacion','Tipo','Check-in','Check-out','Noches','Total','Estado'];
+        const rows = _histFiltered.map(r => {
+            const parts    = r.checkOutDate.split('-');
+            const checkOut = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00Z`);
+            const isCancelled = r.status === 'cancelled';
+            const isCompleted = !isCancelled && checkOut < hondurasNow;
+            const effStatus   = isCancelled ? 'Cancelada' : isCompleted ? 'Completada' : 'Confirmada';
+            const c = window._currency || { symbol: 'L.' };
+            return [
+                r.userName  || '',
+                'Hab. ' + r.roomNumber,
+                r.roomType  || '',
+                r.checkInDate,
+                r.checkOutDate,
+                r.nights,
+                c.symbol + ' ' + (r.totalCost || 0).toFixed(2),
+                effStatus
+            ].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',');
+        });
+
+        const csv  = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = 'ProBook-Historial-' + new Date().toISOString().slice(0,10) + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
 </script>
+<div id="change-pwd-modal-root"></div>
 </body>
 </html>

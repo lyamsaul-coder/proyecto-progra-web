@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProBook - Iniciar Sesion</title>
     <link rel="stylesheet" href="/css/styles.css">
@@ -390,9 +393,16 @@
         try {
             const data = await apiPost("/Auth/login", { email, password }, false);
             saveSession(data.token, data.user);
-            window.location.href = data.user.role === "manager"
-                ? "/manager-dashboard.html"
-                : "/guest-dashboard.html";
+
+            // Si el backend indica que tiene contrasena temporal,
+            // redirigir obligatoriamente a change-password antes de entrar al sistema
+            if (data.user.requiresPasswordChange) {
+                window.location.href = "/change-password.html";
+            } else {
+                window.location.href = data.user.role === "manager"
+                    ? "/manager-dashboard.html"
+                    : "/guest-dashboard.html";
+            }
         } catch (error) {
             showAlert("alert-container", error.message || "Error al iniciar sesion.");
         } finally {

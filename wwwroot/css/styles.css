@@ -931,6 +931,54 @@ tbody td { padding: 0.85rem 1rem; color: var(--text); vertical-align: middle; }
     .stats-grid { grid-template-columns: 1fr; }
     .navbar-role { display: none; }
     .btn-lg { padding: 0.75rem 1.5rem; font-size: 0.95rem; }
+    /* Navbar: apilar botones en móvil muy pequeño */
+    .navbar-user { gap: 0.35rem; }
+    .navbar-user .btn { font-size: 0.75rem; padding: 0.3rem 0.6rem; }
+    .theme-toggle { font-size: 0.75rem; padding: 0.3rem 0.5rem; }
+}
+
+/* ============================================================
+   RESPONSIVE - TABLAS EN MÓVIL
+   ============================================================ */
+@media (max-width: 768px) {
+    /* Ocultar columnas menos importantes en tablas */
+    .table-hide-mobile { display: none !important; }
+
+    /* Tabla de huéspedes: compactar */
+    .table-wrapper table { min-width: 520px; }
+
+    /* Cards de reserva: grid de 1 columna */
+    .reservation-detail-grid { grid-template-columns: 1fr 1fr !important; }
+
+    /* Modal de reserva manager: una columna */
+    .confirm-modal { margin: 1rem; width: calc(100% - 2rem) !important; max-width: none !important; }
+
+    /* Quick actions en dashboard */
+    .quick-actions { grid-template-columns: 1fr 1fr !important; }
+    .quick-action-desc { display: none; }
+
+    /* Two-col en manager dashboard */
+    .two-col { grid-template-columns: 1fr !important; }
+
+    /* Rooms grid */
+    .rooms-grid { grid-template-columns: 1fr !important; }
+
+    /* Page header en móvil */
+    .page-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+    .page-header .btn { width: 100%; text-align: center; }
+
+    /* Summary cards de 3 columnas → 1 */
+    .summary-cards { grid-template-columns: 1fr !important; }
+
+    /* Settings grid */
+    .settings-grid { grid-template-columns: 1fr !important; }
+
+    /* Charts grid */
+    .charts-grid { grid-template-columns: 1fr !important; }
+
+    /* Filter bar: scroll horizontal */
+    .filter-bar { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 0.5rem; }
+    .filter-bar::-webkit-scrollbar { display: none; }
 }
 
 /* ============================================================

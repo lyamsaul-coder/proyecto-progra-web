@@ -181,15 +181,65 @@
     requireAuth('guest');
     renderNavbar('guest');
 
+    // ── Verificación RÁPIDA desde localStorage ──────────────────────────────
+    // Si el usuario tiene fechas guardadas localmente, verificar antes de ir al servidor.
+    // Esto evita que la página bloquee aunque el backend aún no esté recompilado.
+    (function checkLocalExpiry() {
+        const u = getUser();
+        if (!u) return;
+        // reservedDates tiene formato "dd-MM-yyyy - dd-MM-yyyy"
+        const dates = u.reservedDates || '';
+        const match = dates.match(/\d{2}-\d{2}-\d{4}.*?(\d{2})-(\d{2})-(\d{4})$/);
+        if (match) {
+            const checkOutLocal = new Date(`${match[3]}-${match[2]}-${match[1]}T00:00:00Z`);
+            const hondurasNow   = new Date(Date.now() - 6 * 60 * 60 * 1000);
+            if (checkOutLocal < hondurasNow) {
+                // La reserva ya expiró según localStorage — limpiar y redirigir sin esperar al servidor
+                u.hasReserved    = false;
+                u.reservedRoomId = null;
+                u.reservedDates  = null;
+                localStorage.setItem('probook_user', JSON.stringify(u));
+                window.location.href = '/guest-dashboard.html';
+                return;
+            }
+        }
+    })();
+
     loadReservation();
 
     async function loadReservation() {
         try {
             const r = await apiGet('/Reservations/my');
+
+            // Detectar si la reserva ya expiró (checkOut < ahora Honduras UTC-6)
+            const parts       = r.checkOutDate.split('-');
+            const checkOutUTC = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00Z`);
+            const hondurasNow = new Date(Date.now() - 6 * 60 * 60 * 1000);
+            const hasExpired  = checkOutUTC < hondurasNow;
+            const isCancelled = r.status === 'cancelled';
+
+            if (hasExpired || isCancelled) {
+                const u = getUser();
+                if (u) {
+                    u.hasReserved    = false;
+                    u.reservedRoomId = null;
+                    u.reservedDates  = null;
+                    localStorage.setItem('probook_user', JSON.stringify(u));
+                }
+                window.location.href = '/guest-dashboard.html';
+                return;
+            }
+
             renderReservation(r);
         } catch {
-            // Si no encuentra reserva, mostrar datos del usuario
-            renderFromUserData();
+            const u = getUser();
+            if (u) {
+                u.hasReserved    = false;
+                u.reservedRoomId = null;
+                u.reservedDates  = null;
+                localStorage.setItem('probook_user', JSON.stringify(u));
+            }
+            window.location.href = '/guest-dashboard.html';
         }
     }
 
@@ -220,22 +270,6 @@
                     <div class="immutable-notice">
                         🔒 Esta reserva no puede modificarse ni cancelarse.
                         Si necesitas asistencia, comunicate con el gerente del hotel.
-                    </div>
-                </div>`;
-    }
-
-    function renderFromUserData() {
-        const user = getUser();
-        document.getElementById('reservation-card').innerHTML = `
-                <div class="existing-body" style="text-align:center;padding:1.5rem">
-                    <div style="font-size:1rem;font-weight:600;margin-bottom:0.5rem">
-                        Habitacion: ${user?.reservedRoomId || 'Ver en el panel'}
-                    </div>
-                    <div style="color:var(--text-muted);font-size:0.875rem">
-                        Fechas: ${user?.reservedDates || 'Disponibles en tu panel'}
-                    </div>
-                    <div class="immutable-notice" style="margin-top:1rem">
-                        🔒 Tu reserva esta registrada y no puede modificarse.
                     </div>
                 </div>`;
     }

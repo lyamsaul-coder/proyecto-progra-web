@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProBook - Gestion de Habitaciones</title>
     <link rel="stylesheet" href="/css/styles.css">
@@ -20,6 +23,7 @@
             overflow: hidden;
             box-shadow: var(--shadow-sm);
             transition: var(--transition);
+            cursor: pointer;
         }
 
         .room-card:hover {
@@ -51,9 +55,16 @@
             border-radius: 20px;
         }
 
-        .room-card-body {
-            padding: 1.25rem 1.5rem;
+        .room-occupied-badge {
+            background: rgba(220, 53, 69, 0.85);
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.2rem 0.65rem;
+            border-radius: 20px;
         }
+
+        .room-card-body { padding: 1.25rem 1.5rem; }
 
         .room-info-row {
             display: flex;
@@ -65,7 +76,6 @@
         }
 
         .room-info-row:last-of-type { border-bottom: none; }
-
         .room-info-label { color: var(--text-muted); }
         .room-info-value { font-weight: 600; color: var(--text); }
 
@@ -100,34 +110,131 @@
             justify-content: flex-end;
         }
 
-        [data-theme="dark"] .room-card {
-            background: #1A1D26 !important;
-            border-color: #2A2D3A;
+        /* Modal de reserva de habitacion */
+        .reservation-detail {
+            background: var(--bg);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
         }
+
+        .reservation-detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            padding: 0.35rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .reservation-detail-row:last-child { border-bottom: none; }
+        .reservation-detail-label { color: var(--text-muted); }
+        .reservation-detail-value { font-weight: 600; color: var(--text); }
+
+        .reservation-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .btn-cancel-res {
+            flex: 1;
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--danger);
+            background: transparent;
+            color: var(--danger);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        .btn-cancel-res:hover { background: var(--danger); color: white; }
+
+        .btn-block-guest {
+            flex: 1;
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--text-muted);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        .btn-block-guest:hover { background: var(--text-muted); color: white; }
+
+        .no-reservation-msg {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Confirm overlay */
+        .confirm-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirm-overlay.active { display: flex; }
+
+        .confirm-box {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+        }
+
+        .confirm-box-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .confirm-box-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .confirm-box-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        [data-theme="dark"] .room-card { background: #1A1D26 !important; border-color: #2A2D3A; }
         [data-theme="dark"] .room-info-row { border-color: #2A2D3A; }
         [data-theme="dark"] .room-info-label { color: #A0A8B8; }
         [data-theme="dark"] .room-info-value { color: #E8EAF0; }
-        [data-theme="dark"] .room-card-footer {
-            background: #1A1D26 !important;
-            border-color: #2A2D3A;
-        }
-        [data-theme="dark"] .search-bar {
-            background: #1A1D26;
-            border-color: #2A2D3A;
-        }
-        [data-theme="dark"] .search-count { color: #A0A8B8; }
+        [data-theme="dark"] .room-card-footer { background: #1A1D26 !important; border-color: #2A2D3A; }
+        [data-theme="dark"] .reservation-detail { background: #12141c; border-color: #2A2D3A; }
+        [data-theme="dark"] .reservation-detail-row { border-color: #2A2D3A; }
+        [data-theme="dark"] .confirm-box { background: #1A1D26; border-color: #2A2D3A; }
     </style>
 </head>
 <body>
 
-<!-- Navbar -->
 <nav class="navbar">
     <a href="/manager-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
     <div id="nav-user" class="navbar-user"></div>
 </nav>
 
 <div class="layout">
-    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-section">
             <div class="sidebar-label">Principal</div>
@@ -137,12 +244,15 @@
             <a href="/reports.html" class="sidebar-link">📈 Reportes</a>
         </div>
         <div class="sidebar-section">
+            <div class="sidebar-label">Sistema</div>
+            <a href="/settings.html" class="sidebar-link">⚙️ Configuracion</a>
+        </div>
+        <div class="sidebar-section">
             <div class="sidebar-label">Cuenta</div>
             <button class="sidebar-link" onclick="logout()">🚪 Cerrar sesion</button>
         </div>
     </aside>
 
-    <!-- Contenido -->
     <main class="main-content">
         <div class="page-header flex-between">
             <div>
@@ -156,7 +266,6 @@
 
         <div id="alert-container"></div>
 
-        <!-- Busqueda -->
         <div class="card mb-3">
             <div style="display:flex;gap:1rem;align-items:center">
                 <input type="text" id="search-input" class="form-control"
@@ -167,7 +276,6 @@
             </div>
         </div>
 
-        <!-- Grid de habitaciones -->
         <div id="rooms-grid" class="rooms-grid">
             <div class="empty-state">
                 <div class="spinner spinner-primary"></div>
@@ -183,9 +291,7 @@
             <h3 class="modal-title" id="modal-room-title">Nueva habitacion</h3>
             <button class="modal-close" onclick="closeModal('modal-room')">×</button>
         </div>
-
         <div id="modal-alert"></div>
-
         <div class="grid-2">
             <div class="form-group">
                 <label class="form-label">Numero de habitacion *</label>
@@ -207,7 +313,6 @@
                 </select>
             </div>
         </div>
-
         <div class="grid-2">
             <div class="form-group">
                 <label class="form-label">Capacidad (personas) *</label>
@@ -218,25 +323,20 @@
                 <input type="number" id="room-rate" class="form-control" min="1" placeholder="150">
             </div>
         </div>
-
         <div class="form-group">
             <label class="form-label">Descripcion</label>
             <input type="text" id="room-description" class="form-control" placeholder="Descripcion de la habitacion">
         </div>
-
         <div class="form-group">
             <label class="form-label">Amenidades (separadas por coma)</label>
             <input type="text" id="room-amenities" class="form-control" placeholder="WiFi, TV, AC, Jacuzzi">
             <span class="form-hint">Ejemplo: WiFi, TV, AC, Terraza</span>
         </div>
-
         <div class="form-group">
             <label class="form-label">URL de foto</label>
             <input type="text" id="room-photo" class="form-control" placeholder="https://...">
         </div>
-
         <input type="hidden" id="room-editing-number">
-
         <div class="modal-footer">
             <button class="btn btn-outline" onclick="closeModal('modal-room')">Cancelar</button>
             <button id="btn-save-room" class="btn btn-primary" onclick="saveRoom()">Guardar</button>
@@ -244,7 +344,7 @@
     </div>
 </div>
 
-<!-- Modal confirmar eliminacion -->
+<!-- Modal eliminar habitacion -->
 <div id="modal-delete" class="modal-overlay" onclick="handleOverlayClick(event, 'modal-delete')">
     <div class="modal" style="max-width:400px">
         <div class="modal-header">
@@ -264,6 +364,45 @@
     </div>
 </div>
 
+<!-- Modal ver detalle de habitacion -->
+<div id="modal-reservation" class="modal-overlay" onclick="handleOverlayClick(event, 'modal-reservation')">
+    <div class="modal" style="max-width:520px">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modal-res-title">Hab. — Detalle</h3>
+            <button class="modal-close" onclick="closeModal('modal-reservation')">×</button>
+        </div>
+        <!-- Tabs dentro del modal -->
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1rem">
+            <button id="modal-tab-res" onclick="switchRoomModalTab('res')"
+                    style="flex:1;padding:0.6rem;border:none;background:none;font-weight:600;font-size:0.85rem;color:var(--primary);border-bottom:2px solid var(--primary);cursor:pointer">
+                📋 Reserva
+            </button>
+            <button id="modal-tab-rev" onclick="switchRoomModalTab('rev')"
+                    style="flex:1;padding:0.6rem;border:none;background:none;font-weight:600;font-size:0.85rem;color:var(--text-muted);border-bottom:2px solid transparent;cursor:pointer">
+                ⭐ Reseñas
+            </button>
+        </div>
+        <div id="modal-res-body">
+            <div class="no-reservation-msg"><span class="spinner spinner-primary"></span></div>
+        </div>
+        <div id="modal-rev-body" style="display:none">
+            <div class="no-reservation-msg"><span class="spinner spinner-primary"></span></div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm overlay para cancelar/bloquear desde el modal de reserva -->
+<div id="confirm-overlay" class="confirm-overlay">
+    <div class="confirm-box">
+        <div class="confirm-box-title" id="confirm-title">Confirmar</div>
+        <div class="confirm-box-desc" id="confirm-desc"></div>
+        <div class="confirm-box-actions">
+            <button class="btn btn-outline" onclick="closeConfirm()">No, volver</button>
+            <button id="confirm-action-btn" class="btn btn-danger" onclick="executeConfirm()">Confirmar</button>
+        </div>
+    </div>
+</div>
+
 <script src="/js/app.js"></script>
 <script>
     requireAuth('manager');
@@ -271,6 +410,7 @@
 
     let allRooms = [];
     let deletingRoomNumber = '';
+    let pendingAction = null;
 
     loadRooms();
 
@@ -280,16 +420,15 @@
             renderRooms(allRooms);
         } catch (error) {
             document.getElementById('rooms-grid').innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">⚠️</div>
-                        <div class="empty-state-title">Error al cargar habitaciones</div>
-                        <div class="empty-state-desc">${error.message}</div>
-                    </div>`;
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚠️</div>
+                    <div class="empty-state-title">Error al cargar habitaciones</div>
+                    <div class="empty-state-desc">${error.message}</div>
+                </div>`;
         }
     }
 
     function getImageByType(roomType, photoUrl) {
-        // Si tiene foto propia la usamos, sino usamos la imagen por tipo
         if (photoUrl && photoUrl !== 'string' && photoUrl.startsWith('http')) return photoUrl;
         const map = {
             'Simple':    'https://i.imgur.com/CmaHmWN.png',
@@ -300,7 +439,7 @@
             'Familiar':  'https://i.imgur.com/AEAor06.png',
             'Gamer':     'https://i.imgur.com/8Be8IZv.png',
             'Business':  'https://i.imgur.com/DWkpHS4.png',
-            'Romantica':  'https://i.imgur.com/NpAIpeN.png'
+            'Romantica': 'https://i.imgur.com/NpAIpeN.png'
         };
         return map[roomType] || 'https://i.imgur.com/CmaHmWN.png';
     }
@@ -312,11 +451,11 @@
 
         if (rooms.length === 0) {
             grid.innerHTML = `
-                    <div class="empty-state" style="grid-column:1/-1">
-                        <div class="empty-state-icon">🏨</div>
-                        <div class="empty-state-title">No hay habitaciones</div>
-                        <div class="empty-state-desc">Crea la primera habitacion con el boton de arriba</div>
-                    </div>`;
+                <div class="empty-state" style="grid-column:1/-1">
+                    <div class="empty-state-icon">🏨</div>
+                    <div class="empty-state-title">No hay habitaciones</div>
+                    <div class="empty-state-desc">Crea la primera habitacion con el boton de arriba</div>
+                </div>`;
             return;
         }
 
@@ -325,50 +464,271 @@
                 ? room.amenities.flatMap(a => a.split(',').map(x => x.trim())).filter(Boolean)
                 : [];
 
+            // Mostrar badge de ocupada si tiene reservas activas
+            const occupiedBadge = room.reservationCount > 0
+                ? `<span class="room-occupied-badge">Ocupada</span>`
+                : '';
+
             return `
-                <div class="room-card">
-                    <img src="${getImageByType(room.roomType, room.photoUrl)}"
-                         alt="Habitacion ${room.roomNumber}"
-                         class="room-card-img"
-                         onerror="this.src='https://i.imgur.com/CmaHmWN.png'">
-                    <div class="room-card-header">
-                        <span class="room-number">Hab. ${room.roomNumber}</span>
+            <div class="room-card" onclick="viewRoomReservation('${room.roomNumber}', event)">
+                <img src="${getImageByType(room.roomType, room.photoUrl)}"
+                     alt="Habitacion ${room.roomNumber}"
+                     class="room-card-img"
+                     onerror="this.src='https://i.imgur.com/CmaHmWN.png'">
+                <div class="room-card-header">
+                    <span class="room-number">Hab. ${room.roomNumber}</span>
+                    <div style="display:flex;gap:0.4rem;align-items:center">
+                        ${occupiedBadge}
                         <span class="room-type-badge">${room.roomType}</span>
                     </div>
-                    <div class="room-card-body">
-                        <div class="room-info-row">
-                            <span class="room-info-label">Capacidad</span>
-                            <span class="room-info-value">${room.capacity} personas</span>
-                        </div>
-                        <div class="room-info-row">
-                            <span class="room-info-label">Tarifa base</span>
-                            <span class="room-info-value">${formatCurrency(room.baseRate)} / noche</span>
-                        </div>
-                        <div class="room-info-row">
-                            <span class="room-info-label">Reservas</span>
-                            <span class="room-info-value">${room.reservationCount}</span>
-                        </div>
-                        ${room.description && room.description !== 'string' ? `
-                        <div class="room-info-row">
-                            <span class="room-info-label">Descripcion</span>
-                            <span class="room-info-value" style="text-align:right;max-width:200px">${room.description}</span>
-                        </div>` : ''}
-                        ${amenities.length > 0 ? `
-                        <div class="room-amenities">
-                            ${amenities.map(a => `<span class="amenity-tag">${a}</span>`).join('')}
-                        </div>` : ''}
+                </div>
+                <div class="room-card-body">
+                    <div class="room-info-row">
+                        <span class="room-info-label">Capacidad</span>
+                        <span class="room-info-value">${room.capacity} personas</span>
                     </div>
-                    <div class="room-card-footer">
-                        <button class="btn btn-outline btn-sm" onclick="editRoom('${room.roomNumber}')">
-                            Editar
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteRoom('${room.roomNumber}')">
-                            Eliminar
-                        </button>
+                    <div class="room-info-row">
+                        <span class="room-info-label">Tarifa base</span>
+                        <span class="room-info-value">${formatCurrency(room.baseRate)} / noche</span>
                     </div>
-                </div>`;
+                    <div class="room-info-row">
+                        <span class="room-info-label">Reservas</span>
+                        <span class="room-info-value">${room.reservationCount}</span>
+                    </div>
+                    ${room.description && room.description !== 'string' ? `
+                    <div class="room-info-row">
+                        <span class="room-info-label">Descripcion</span>
+                        <span class="room-info-value" style="text-align:right;max-width:200px">${room.description}</span>
+                    </div>` : ''}
+                    ${amenities.length > 0 ? `
+                    <div class="room-amenities">
+                        ${amenities.map(a => `<span class="amenity-tag">${a}</span>`).join('')}
+                    </div>` : ''}
+                </div>
+                <div class="room-card-footer" onclick="event.stopPropagation()">
+                    <button class="btn btn-outline btn-sm" onclick="editRoom('${room.roomNumber}')">
+                        Editar
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteRoom('${room.roomNumber}')">
+                        Eliminar
+                    </button>
+                </div>
+            </div>`;
         }).join('');
     }
+
+    // ---- Ver reserva al hacer clic en la tarjeta ----
+
+    let _currentModalRoom = null;
+
+    async function viewRoomReservation(roomNumber, event) {
+        if (event.target.closest('.room-card-footer')) return;
+
+        _currentModalRoom = roomNumber;
+        document.getElementById('modal-res-title').textContent = `Hab. ${roomNumber}`;
+        document.getElementById('modal-res-body').innerHTML =
+            '<div class="no-reservation-msg"><span class="spinner spinner-primary"></span></div>';
+        document.getElementById('modal-rev-body').innerHTML =
+            '<div class="no-reservation-msg"><span class="spinner spinner-primary"></span></div>';
+        switchRoomModalTab('res');
+        openModal('modal-reservation');
+
+        try {
+            const data = await apiGet(`/Guests/by-room/${roomNumber}`);
+
+            if (!data.hasReservation || data.reservations.length === 0) {
+                document.getElementById('modal-res-body').innerHTML = `
+                    <div class="no-reservation-msg">
+                        <div style="font-size:2rem;margin-bottom:0.5rem">🏨</div>
+                        <div>Esta habitacion no tiene reservas activas.</div>
+                    </div>`;
+                return;
+            }
+
+            // Mostrar todas las reservas activas de la habitacion
+            const html = data.reservations.map(res => `
+                <div class="reservation-detail">
+                    <div class="reservation-detail-row">
+                        <span class="reservation-detail-label">Huesped</span>
+                        <span class="reservation-detail-value">${res.guestName}</span>
+                    </div>
+                    <div class="reservation-detail-row">
+                        <span class="reservation-detail-label">Email</span>
+                        <span class="reservation-detail-value" style="font-size:0.82rem">${res.guestEmail}</span>
+                    </div>
+                    <div class="reservation-detail-row">
+                        <span class="reservation-detail-label">Check-in</span>
+                        <span class="reservation-detail-value">${formatDate(res.checkInDate)}</span>
+                    </div>
+                    <div class="reservation-detail-row">
+                        <span class="reservation-detail-label">Check-out</span>
+                        <span class="reservation-detail-value">${formatDate(res.checkOutDate)}</span>
+                    </div>
+                    <div class="reservation-detail-row">
+                        <span class="reservation-detail-label">Noches</span>
+                        <span class="reservation-detail-value">${res.nights}</span>
+                    </div>
+                    <div class="reservation-detail-row">
+                        <span class="reservation-detail-label">Total</span>
+                        <span class="reservation-detail-value">${formatCurrency(res.totalCost)}</span>
+                    </div>
+                    <div class="reservation-detail-row">
+                        <span class="reservation-detail-label">Estado</span>
+                        <span class="reservation-detail-value">${getStatusBadge(res.status)}</span>
+                    </div>
+                    <div class="reservation-actions">
+                        <button class="btn-cancel-res"
+                            onclick="confirmCancelFromRoom('${res.reservationId}', '${escapeHtml(res.guestName)}')">
+                            Cancelar reserva
+                        </button>
+                        <button class="btn-block-guest"
+                            onclick="confirmBlockFromRoom('${res.userId}', '${escapeHtml(res.guestName)}')">
+                            Bloquear huesped
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('modal-res-body').innerHTML = html;
+
+        } catch (error) {
+            document.getElementById('modal-res-body').innerHTML = `
+                <div class="no-reservation-msg">Error al cargar datos: ${error.message}</div>`;
+        }
+    }
+
+    // ---- Tab switcher del modal de habitacion ----
+
+    function switchRoomModalTab(tab) {
+        const resBody = document.getElementById('modal-res-body');
+        const revBody = document.getElementById('modal-rev-body');
+        const tabRes  = document.getElementById('modal-tab-res');
+        const tabRev  = document.getElementById('modal-tab-rev');
+
+        const activeStyle   = 'color:var(--primary);border-bottom:2px solid var(--primary)';
+        const inactiveStyle = 'color:var(--text-muted);border-bottom:2px solid transparent';
+
+        if (tab === 'res') {
+            resBody.style.display = '';
+            revBody.style.display = 'none';
+            tabRes.style.cssText += ';' + activeStyle;
+            tabRev.style.cssText += ';' + inactiveStyle;
+        } else {
+            resBody.style.display = 'none';
+            revBody.style.display = '';
+            tabRes.style.cssText += ';' + inactiveStyle;
+            tabRev.style.cssText += ';' + activeStyle;
+            if (_currentModalRoom) loadRoomReviews(_currentModalRoom);
+        }
+    }
+
+    async function loadRoomReviews(roomNumber) {
+        const body = document.getElementById('modal-rev-body');
+        body.innerHTML = '<div class="no-reservation-msg"><span class="spinner spinner-primary"></span></div>';
+        try {
+            const data    = await apiGet(`/Rooms/${roomNumber}/reviews`);
+            const reviews = data.reviews || [];
+
+            if (!reviews.length) {
+                body.innerHTML = '<div class="no-reservation-msg"><span class="mini-empty-icon">⭐</span><div>Esta habitación aún no tiene reseñas.</div></div>';
+                return;
+            }
+
+            const avgStars = data.averageStars || 0;
+            const starsHtml = Array.from({length: 5}, (_, i) =>
+                `<span style="color:${i < Math.round(avgStars) ? '#f59e0b' : '#d1d5db'}">★</span>`
+            ).join('');
+
+            body.innerHTML = `
+                <div style="text-align:center;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border)">
+                    <span style="font-family:var(--font-display);font-size:1.5rem;font-weight:700;color:var(--primary)">${avgStars}</span>
+                    <span style="font-size:1.1rem;margin-left:4px">${starsHtml}</span>
+                    <span style="font-size:0.78rem;color:var(--text-muted);display:block">${reviews.length} reseña${reviews.length !== 1 ? 's' : ''}</span>
+                </div>
+                <div style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:0.75rem">
+                ${reviews.map(r => `
+                    <div style="background:var(--bg);border-radius:var(--radius-sm);padding:0.85rem;border:1px solid var(--border)">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem">
+                            <div>
+                                <span style="font-weight:600;font-size:0.85rem">${r.userName}</span>
+                                <span style="margin-left:8px">${Array.from({length:5},(_,i)=>'<span style="color:'+(i<r.stars?'#f59e0b':'#d1d5db')+'">★</span>').join('')}</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:0.5rem">
+                                <span style="font-size:0.72rem;color:var(--text-muted)">${r.createdAt}</span>
+                                <button onclick="deleteReview('${roomNumber}','${r.id}')"
+                                    style="background:none;border:1px solid var(--danger);color:var(--danger);border-radius:4px;padding:0.15rem 0.45rem;font-size:0.7rem;cursor:pointer;transition:0.2s"
+                                    onmouseover="this.style.background='var(--danger)';this.style.color='white'"
+                                    onmouseout="this.style.background='none';this.style.color='var(--danger)'"
+                                    title="Eliminar reseña">✕</button>
+                            </div>
+                        </div>
+                        ${r.comment ? `<p style="font-size:0.82rem;color:var(--text-light);margin:0;line-height:1.5;font-style:italic">"${r.comment}"</p>` : ''}
+                    </div>`).join('')}
+                </div>`;
+        } catch (err) {
+            body.innerHTML = `<div class="no-reservation-msg">Error: ${err.message}</div>`;
+        }
+    }
+
+    async function deleteReview(roomNumber, reviewId) {
+        if (!confirm('¿Eliminar esta reseña? Esta acción no se puede deshacer.')) return;
+        try {
+            await apiDelete(`/Rooms/${roomNumber}/reviews/${reviewId}`);
+            showAlert('alert-container', 'Reseña eliminada correctamente.', 'success');
+            loadRoomReviews(roomNumber); // recargar la lista
+        } catch (err) {
+            showAlert('alert-container', 'Error al eliminar: ' + err.message, 'danger');
+        }
+    }
+
+    // ---- Confirmaciones desde el modal de reserva ----
+
+    function confirmCancelFromRoom(reservationId, guestName) {
+        pendingAction = { type: 'cancel', id: reservationId };
+        document.getElementById('confirm-title').textContent = 'Cancelar reserva';
+        document.getElementById('confirm-desc').textContent =
+            `¿Cancelar la reserva de ${guestName}? La habitacion quedara disponible y el huesped podra volver a reservar.`;
+        document.getElementById('confirm-overlay').classList.add('active');
+    }
+
+    function confirmBlockFromRoom(userId, guestName) {
+        pendingAction = { type: 'block', id: userId };
+        document.getElementById('confirm-title').textContent = 'Bloquear huesped';
+        document.getElementById('confirm-desc').textContent =
+            `¿Bloquear la cuenta de ${guestName}? No podra iniciar sesion. Esta accion es permanente.`;
+        document.getElementById('confirm-overlay').classList.add('active');
+    }
+
+    function closeConfirm() {
+        pendingAction = null;
+        document.getElementById('confirm-overlay').classList.remove('active');
+    }
+
+    async function executeConfirm() {
+        if (!pendingAction) return;
+        const btn = document.getElementById('confirm-action-btn');
+        setLoading(btn, true);
+
+        try {
+            if (pendingAction.type === 'cancel') {
+                await apiPut(`/Reservations/${pendingAction.id}/cancel`, {});
+                showAlert('alert-container', 'Reserva cancelada. El huesped puede volver a reservar.', 'success');
+            } else if (pendingAction.type === 'block') {
+                await apiPut(`/Reservations/guests/${pendingAction.id}/block`, {});
+                showAlert('alert-container', 'Cuenta del huesped bloqueada.', 'success');
+            }
+            closeConfirm();
+            closeModal('modal-reservation');
+            await loadRooms();
+        } catch (error) {
+            closeConfirm();
+            showAlert('alert-container', error.message || 'Error al ejecutar la accion.', 'danger');
+        } finally {
+            setLoading(btn, false);
+        }
+    }
+
+    // ---- Filtros ----
 
     function filterRooms() {
         const term = document.getElementById('search-input').value.toLowerCase();
@@ -379,10 +739,11 @@
         renderRooms(filtered);
     }
 
+    // ---- Editar y eliminar (sin cambios) ----
+
     function editRoom(roomNumber) {
         const room = allRooms.find(r => r.roomNumber === roomNumber);
         if (!room) return;
-
         document.getElementById('modal-room-title').textContent = `Editar habitacion ${roomNumber}`;
         document.getElementById('room-number').value = room.roomNumber;
         document.getElementById('room-number').disabled = true;
@@ -392,12 +753,8 @@
         document.getElementById('room-description').value = room.description || '';
         document.getElementById('room-photo').value = room.photoUrl || '';
         document.getElementById('room-editing-number').value = roomNumber;
-
-        const amenities = Array.isArray(room.amenities)
-            ? room.amenities.join(', ')
-            : '';
+        const amenities = Array.isArray(room.amenities) ? room.amenities.join(', ') : '';
         document.getElementById('room-amenities').value = amenities;
-
         clearAlert('modal-alert');
         openModal('modal-room');
     }
@@ -411,7 +768,6 @@
     async function confirmDelete() {
         const btn = document.getElementById('btn-confirm-delete');
         setLoading(btn, true);
-
         try {
             await apiDelete(`/Rooms/${deletingRoomNumber}`);
             closeModal('modal-delete');
@@ -428,7 +784,6 @@
     async function saveRoom() {
         const editingNumber = document.getElementById('room-editing-number').value;
         const isEditing = !!editingNumber;
-
         const roomNumber = document.getElementById('room-number').value.trim();
         const roomType = document.getElementById('room-type').value;
         const capacity = parseInt(document.getElementById('room-capacity').value);
@@ -439,7 +794,6 @@
         const amenities = amenitiesRaw ? amenitiesRaw.split(',').map(a => a.trim()).filter(Boolean) : [];
 
         clearAlert('modal-alert');
-
         if (!roomNumber || !roomType || !capacity || !baseRate) {
             showAlert('modal-alert', 'Completa los campos obligatorios (*).');
             return;
@@ -447,24 +801,17 @@
 
         const btn = document.getElementById('btn-save-room');
         setLoading(btn, true);
-
         try {
             if (isEditing) {
-                await apiPut(`/Rooms/${editingNumber}`, {
-                    roomType, capacity, baseRate, description, photoUrl, amenities
-                });
+                await apiPut(`/Rooms/${editingNumber}`, { roomType, capacity, baseRate, description, photoUrl, amenities });
                 showAlert('alert-container', `Habitacion ${editingNumber} actualizada correctamente.`, 'success');
             } else {
-                await apiPost('/Rooms', {
-                    roomNumber, roomType, capacity, baseRate, description, photoUrl, amenities
-                });
+                await apiPost('/Rooms', { roomNumber, roomType, capacity, baseRate, description, photoUrl, amenities });
                 showAlert('alert-container', `Habitacion ${roomNumber} creada correctamente.`, 'success');
             }
-
             closeModal('modal-room');
             resetRoomForm();
             await loadRooms();
-
         } catch (error) {
             showAlert('modal-alert', error.message);
         } finally {
@@ -493,9 +840,12 @@
         }
     }
 
-    // Limpiar formulario al abrir modal de creacion
-    document.getElementById('modal-room').addEventListener('click', function(){});
+    function escapeHtml(str) {
+        return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
     document.querySelector('[onclick="openModal(\'modal-room\')"]').addEventListener('click', resetRoomForm);
 </script>
+<div id="change-pwd-modal-root"></div>
 </body>
 </html>

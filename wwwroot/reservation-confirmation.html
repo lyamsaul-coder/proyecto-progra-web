@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProBook - Reserva Confirmada</title>
     <link rel="stylesheet" href="/css/styles.css">
@@ -12,10 +15,7 @@
             padding: 0 1rem;
         }
 
-        .success-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
+        .success-header { text-align: center; margin-bottom: 2rem; }
 
         .success-icon {
             width: 80px;
@@ -38,10 +38,7 @@
             margin-bottom: 0.4rem;
         }
 
-        .success-subtitle {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
+        .success-subtitle { color: var(--text-muted); font-size: 0.95rem; }
 
         .confirmation-card {
             background: white;
@@ -67,11 +64,7 @@
             color: white;
         }
 
-        .confirmation-room-type {
-            color: rgba(255,255,255,0.75);
-            font-size: 0.875rem;
-            margin-top: 0.15rem;
-        }
+        .confirmation-room-type { color: rgba(255,255,255,0.75); font-size: 0.875rem; margin-top: 0.15rem; }
 
         .confirmation-status {
             background: rgba(255,255,255,0.2);
@@ -82,9 +75,7 @@
             font-weight: 600;
         }
 
-        .confirmation-body {
-            padding: 1.75rem 2rem;
-        }
+        .confirmation-body { padding: 1.75rem 2rem; }
 
         .detail-grid {
             display: grid;
@@ -115,11 +106,7 @@
             color: var(--text);
         }
 
-        .cost-section {
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            overflow: hidden;
-        }
+        .cost-section { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
 
         .cost-row {
             display: flex;
@@ -130,15 +117,10 @@
         }
 
         .cost-row:last-child { border-bottom: none; }
-
         .cost-row-label { color: var(--text-muted); }
         .cost-row-value { font-weight: 600; }
 
-        .cost-row.total {
-            background: rgba(44, 95, 138, 0.05);
-            font-weight: 700;
-        }
-
+        .cost-row.total { background: rgba(44, 95, 138, 0.05); font-weight: 700; }
         .cost-row.total .cost-row-label { color: var(--text); font-size: 1rem; }
         .cost-row.total .cost-row-value {
             font-family: var(--font-display);
@@ -171,6 +153,19 @@
             word-break: break-all;
         }
 
+        .policy-info {
+            background: rgba(44, 95, 138, 0.05);
+            border: 1px solid rgba(44, 95, 138, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 0.85rem 1rem;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .policy-info strong { color: var(--text); }
+
         .actions {
             display: flex;
             gap: 1rem;
@@ -185,7 +180,6 @@
 
         .confirmation-wrapper { animation: fadeInUp 0.4s ease; }
 
-        /* Estilos de impresion */
         @media print {
             body { background: white !important; }
             .navbar, .actions, .no-print { display: none !important; }
@@ -200,35 +194,23 @@
                 border-bottom: 2px solid #2C5F8A;
                 margin-bottom: 1rem;
             }
-            .print-logo {
-                font-family: Georgia, serif;
-                font-size: 1.5rem;
-                font-weight: 700;
-                color: #2C5F8A;
-            }
+            .print-logo { font-family: Georgia, serif; font-size: 1.5rem; font-weight: 700; color: #2C5F8A; }
             .print-logo span { color: #D4A853; }
             .print-date { font-size: 0.8rem; color: #666; }
         }
 
-        @media screen {
-            .print-header { display: none; }
-        }
+        @media screen { .print-header { display: none; } }
 
-
-        [data-theme="dark"] .confirmation-card {
-            background: #1A1D26 !important;
-            border-color: #2A2D3A;
-        }
+        [data-theme="dark"] .confirmation-card { background: #1A1D26 !important; border-color: #2A2D3A; }
         [data-theme="dark"] .ref-code { background: #0F1117; border-color: #2A2D3A; color: #E8EAF0; }
         [data-theme="dark"] .detail-item { background: #0F1117; }
         [data-theme="dark"] .detail-label { color: #A0A8B8; }
         [data-theme="dark"] .detail-value { color: #E8EAF0; }
-        [data-theme="dark"] .summary-total { background: rgba(74,144,196,0.08); }
+        [data-theme="dark"] .policy-info { background: rgba(74,144,196,0.06); border-color: rgba(74,144,196,0.2); }
     </style>
 </head>
 <body style="background:var(--bg)">
 
-<!-- Navbar simple -->
 <nav class="navbar">
     <a href="/guest-dashboard.html" class="navbar-brand">Pro<span>Book</span></a>
     <div id="nav-user" class="navbar-user"></div>
@@ -236,20 +218,17 @@
 
 <div class="confirmation-wrapper">
 
-    <!-- Encabezado visible solo al imprimir -->
     <div class="print-header">
         <div class="print-logo">Pro<span>Book</span></div>
         <div class="print-date" id="print-date"></div>
     </div>
 
-    <!-- Encabezado de exito -->
     <div class="success-header">
         <div class="success-icon">✓</div>
         <h1 class="success-title">Reserva confirmada</h1>
         <p class="success-subtitle">Tu reserva fue procesada exitosamente</p>
     </div>
 
-    <!-- Tarjeta de confirmacion -->
     <div class="confirmation-card">
         <div class="confirmation-card-header">
             <div>
@@ -279,7 +258,6 @@
                 </div>
             </div>
 
-            <!-- Desglose de costos -->
             <div class="cost-section">
                 <div class="cost-row">
                     <span class="cost-row-label">Tarifa base</span>
@@ -302,9 +280,11 @@
         </div>
     </div>
 
-    <div class="alert alert-warning">
-        Esta reserva es definitiva. No puede modificarse ni cancelarse.
-        Conserva el ID de reserva como comprobante.
+    <!-- Politica real de cancelacion -->
+    <div class="policy-info no-print">
+        <strong>Politica de cancelacion:</strong> puedes cancelar esta reserva con al menos
+        <strong>24 horas de anticipacion</strong> al check-in desde tu panel principal.
+        Pasado ese plazo, contacta directamente con recepcion.
     </div>
 
     <div class="actions no-print">
@@ -322,31 +302,26 @@
     requireAuth('guest');
     renderNavbar('guest');
 
-    // Leer datos de la reserva guardados antes de redirigir
     const reservationData = localStorage.getItem('last_reservation');
 
     if (!reservationData) {
         window.location.href = '/guest-dashboard.html';
     } else {
         const data = JSON.parse(reservationData);
-        const r = data.reservation;
-        const user = getUser();
+        const r    = data.reservation;
 
         document.getElementById('conf-room-number').textContent = `Hab. ${r.roomNumber}`;
-        document.getElementById('conf-room-type').textContent = r.roomType;
-        document.getElementById('conf-checkin').textContent = formatDate(r.checkInDate);
-        document.getElementById('conf-checkout').textContent = formatDate(r.checkOutDate);
-        document.getElementById('conf-nights').textContent = `${r.nights} noche${r.nights !== 1 ? 's' : ''}`;
-        document.getElementById('conf-guest').textContent = r.userName;
-        document.getElementById('conf-base').textContent = formatCurrency(data.baseAmount);
-        document.getElementById('conf-tax').textContent = formatCurrency(data.taxAmount);
-        document.getElementById('conf-total').textContent = formatCurrency(data.totalAmount);
-        document.getElementById('conf-id').textContent = r.id;
+        document.getElementById('conf-room-type').textContent   = r.roomType;
+        document.getElementById('conf-checkin').textContent     = formatDate(r.checkInDate);
+        document.getElementById('conf-checkout').textContent    = formatDate(r.checkOutDate);
+        document.getElementById('conf-nights').textContent      = `${r.nights} noche${r.nights !== 1 ? 's' : ''}`;
+        document.getElementById('conf-guest').textContent       = r.userName;
+        document.getElementById('conf-base').textContent        = formatCurrency(data.baseAmount);
+        document.getElementById('conf-tax').textContent         = formatCurrency(data.taxAmount);
+        document.getElementById('conf-total').textContent       = formatCurrency(data.totalAmount);
+        document.getElementById('conf-id').textContent          = r.id;
 
-        // Limpiar despues de mostrar
         localStorage.removeItem('last_reservation');
-
-        // Fecha para el comprobante impreso
         document.getElementById('print-date').textContent =
             'Emitido: ' + new Date().toLocaleString('es-HN');
     }

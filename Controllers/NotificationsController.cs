@@ -24,12 +24,15 @@ public class NotificationsController : ControllerBase
 {
     private readonly IReservationService _reservationService;
     private readonly ILogger<NotificationsController> _logger;
+    private readonly FirebaseService _firebaseService;
 
     public NotificationsController(
         IReservationService reservationService,
+        FirebaseService firebaseService,
         ILogger<NotificationsController> logger)
     {
         _reservationService = reservationService;
+        _firebaseService    = firebaseService;
         _logger = logger;
     }
 
@@ -89,29 +92,50 @@ public class NotificationsController : ControllerBase
             }
             else if (role == "guest")
             {
-                // El huesped solo ve la notificacion de su propia reserva
                 if (string.IsNullOrEmpty(userId))
                     return Ok(new List<object>());
 
+                var notifList = new List<object>();
+
+                // 1. Notificacion de reserva activa confirmada
                 var reservation = await _reservationService.GetReservationByUserId(userId);
-
-                if (reservation == null)
-                    return Ok(new List<object>());
-
-                var notifications = new[]
+                if (reservation != null && reservation.Status != "cancelled")
                 {
-                    new
+                    notifList.Add(new
                     {
                         id        = $"res_{reservation.Id}",
                         type      = "reservation_confirmed",
                         title     = "¡Reserva confirmada!",
-                        message   = $"Hab. {reservation.RoomNumber} ({reservation.RoomType}) · {reservation.CheckInDate} → {reservation.CheckOutDate} · {reservation.TotalCost:C2}",
+                        message   = $"Hab. {reservation.RoomNumber} ({reservation.RoomType}) · {reservation.CheckInDate} → {reservation.CheckOutDate}",
                         timestamp = reservation.Timestamp,
                         icon      = "✅"
-                    }
-                };
+                    });
+                }
 
-                return Ok(notifications);
+                // 2. Notificaciones de sistema (cancelaciones por el manager, etc.)
+                var notifCol  = _firebaseService.GetCollection("notifications");
+                var snapshot  = await notifCol
+                    .WhereEqualTo("UserId", userId)
+                    .GetSnapshotAsync();
+
+                foreach (var doc in snapshot.Documents)
+                {
+                    var d = doc.ToDictionary();
+                    notifList.Add(new
+                    {
+                        id        = doc.Id,
+                        type      = d.ContainsKey("Type")    ? d["Type"].ToString()    : "info",
+                        title     = d.ContainsKey("Title")   ? d["Title"].ToString()   : "Notificacion",
+                        message   = d.ContainsKey("Message") ? d["Message"].ToString() : "",
+                        timestamp = d.ContainsKey("CreatedAt")
+                            ? ((Google.Cloud.Firestore.Timestamp)d["CreatedAt"]).ToDateTime().ToString("dd-MM-yyyy HH:mm")
+                            : "",
+                        icon      = d.ContainsKey("Icon")    ? d["Icon"].ToString()    : "📌"
+                    });
+                }
+
+                // Ordenar por más recientes primero
+                return Ok(notifList.OrderByDescending(n => ((dynamic)n).timestamp).ToList());
             }
 
             return Ok(new List<object>());

@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', updateThemeBtn);
 // Maneja la comunicacion con el backend y utilidades comunes
 // ============================================================
 
-const API_URL = 'https://localhost:44354/api';
+const API_URL = window.location.origin + '/api';
 
 // ============================================================
 // MANEJO DE TOKEN JWT
@@ -121,7 +121,12 @@ async function apiPost(endpoint, body, requireToken = true) {
     });
     const data = await response.json();
     if (response.status === 401) { handleUnauthorized(); return; }
-    if (!response.ok) throw new Error(data.message || 'Error en la peticion');
+    if (!response.ok) {
+        const err = new Error(data.message || 'Error en la peticion');
+        err.status = response.status;
+        err.data   = data;
+        throw err;
+    }
     return data;
 }
 
@@ -203,12 +208,51 @@ function formatDate(dateStr) {
     return `${day} ${months[month]} ${year}`;
 }
 
-// Formatear moneda
+// ============================================================
+// CONFIGURACIÓN DE MONEDA — cargada desde el backend al iniciar
+// ============================================================
+
+window._currency = {
+    symbol:  'L.',
+    code:    'HNL',
+    locale:  'es-HN',
+    taxRate: 0.15,
+    name:    'Lempira hondureño'
+};
+
+async function loadCurrencySettings() {
+    try {
+        const API = window.location.origin + '/api';
+        const res = await fetch(`${API}/Settings/currency`);
+        if (res.ok) {
+            const data = await res.json();
+            window._currency = {
+                symbol:  data.symbol  || 'L.',
+                code:    data.code    || 'HNL',
+                locale:  data.locale  || 'es-HN',
+                taxRate: data.taxRate ?? 0.15,
+                name:    data.name    || ''
+            };
+        }
+    } catch { /* usar valores por defecto si falla */ }
+}
+
+// Cargar configuración tan pronto como se ejecute app.js
+loadCurrencySettings();
+
+// Formatear moneda usando la configuración activa
 function formatCurrency(amount) {
-    return `L. ${parseFloat(amount).toLocaleString('es-HN', {
+    const c = window._currency;
+    const formatted = parseFloat(amount).toLocaleString(c.locale, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-    })}`;
+    });
+    return `${c.symbol} ${formatted}`;
+}
+
+// Obtener la tasa de impuesto activa (para cálculos en el frontend)
+function getTaxRate() {
+    return window._currency.taxRate ?? 0.15;
 }
 
 // Obtener fecha de hoy en formato dd-MM-yyyy
@@ -238,9 +282,11 @@ function apiDateToInput(dateStr) {
 // Obtener badge HTML segun estado
 function getStatusBadge(status) {
     const map = {
-        'confirmed': '<span class="badge badge-success">Confirmada</span>',
-        'pending': '<span class="badge badge-warning">Pendiente</span>',
-        'sin reservar': '<span class="badge badge-muted">Sin reservar</span>'
+        'confirmed':   '<span class="badge badge-success">Confirmada</span>',
+        'pending':     '<span class="badge badge-warning">Pendiente</span>',
+        'cancelled':   '<span class="badge badge-muted">Cancelada</span>',
+        'completed':   '<span class="badge badge-info" style="background:rgba(44,95,138,0.12);color:#2C5F8A;border:1px solid rgba(44,95,138,0.25)">Completada</span>',
+        'sin reservar':'<span class="badge badge-muted">Sin reservar</span>'
     };
     return map[status] || `<span class="badge badge-muted">${status}</span>`;
 }
@@ -259,6 +305,7 @@ function renderNavbar(role) {
             <button class="theme-toggle" onclick="toggleTheme()">
                 <span>${isDark ? '☀️' : '🌙'}</span> ${isDark ? 'Claro' : 'Oscuro'}
             </button>
+            <button class="btn btn-outline btn-sm" onclick="openChangePasswordModal()" title="Cambiar contraseña">🔑</button>
             <button class="btn btn-outline btn-sm" onclick="logout()">Salir</button>
         `;
     }
@@ -546,3 +593,237 @@ function initNotifications() {
 
 // Arrancar cuando el DOM esta listo
 document.addEventListener('DOMContentLoaded', initNotifications);
+
+// ============================================================
+// MODAL CAMBIAR CONTRASEÑA — disponible para huésped y manager
+// Uso: llamar initChangePasswordModal() en cualquier página
+// y agregar <div id="change-pwd-modal-root"></div> al body
+// ============================================================
+
+function initChangePasswordModal() {
+    // Inyectar HTML del modal si no existe ya
+    if (document.getElementById('modal-change-pwd')) return;
+
+    // Usar el div raíz si existe, o inyectar directamente en body como fallback
+    let root = document.getElementById('change-pwd-modal-root');
+    if (!root) {
+        root = document.createElement('div');
+        root.id = 'change-pwd-modal-root';
+        document.body.appendChild(root);
+    }
+
+    root.innerHTML = `
+    <div id="modal-change-pwd" class="modal-overlay-change-pwd">
+        <div class="modal-box-change-pwd">
+            <div class="modal-pwd-header">
+                <div>
+                    <div class="modal-pwd-title">Cambiar contraseña</div>
+                    <div class="modal-pwd-desc">Ingresa tu contraseña actual y elige una nueva</div>
+                </div>
+                <button class="modal-pwd-close" onclick="closeChangePasswordModal()">×</button>
+            </div>
+            <div id="change-pwd-alert" style="margin-bottom:0.75rem"></div>
+            <div class="form-group">
+                <label class="form-label">Contraseña actual</label>
+                <div class="pwd-input-wrap">
+                    <input type="password" id="pwd-current" class="form-control"
+                           placeholder="Tu contraseña actual" autocomplete="current-password">
+                    <button class="pwd-toggle" onclick="togglePwdVisibility('pwd-current', this)" tabindex="-1">👁</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nueva contraseña</label>
+                <div class="pwd-input-wrap">
+                    <input type="password" id="pwd-new" class="form-control"
+                           placeholder="Mínimo 6 caracteres" autocomplete="new-password"
+                           oninput="checkPwdStrength(this.value)">
+                    <button class="pwd-toggle" onclick="togglePwdVisibility('pwd-new', this)" tabindex="-1">👁</button>
+                </div>
+                <div class="pwd-strength-bar"><div id="pwd-strength-fill" class="pwd-strength-fill"></div></div>
+                <div id="pwd-strength-label" class="pwd-strength-label"></div>
+            </div>
+            <div class="form-group" style="margin-bottom:1.5rem">
+                <label class="form-label">Confirmar nueva contraseña</label>
+                <div class="pwd-input-wrap">
+                    <input type="password" id="pwd-confirm" class="form-control"
+                           placeholder="Repite la nueva contraseña" autocomplete="new-password">
+                    <button class="pwd-toggle" onclick="togglePwdVisibility('pwd-confirm', this)" tabindex="-1">👁</button>
+                </div>
+            </div>
+            <div style="display:flex;gap:0.75rem;justify-content:flex-end">
+                <button class="btn btn-outline" onclick="closeChangePasswordModal()">Cancelar</button>
+                <button id="btn-save-pwd" class="btn btn-primary" onclick="submitChangePassword()">
+                    Guardar contraseña
+                </button>
+            </div>
+        </div>
+    </div>`;
+
+    // Inyectar CSS si no está ya
+    if (!document.getElementById('change-pwd-styles')) {
+        const style = document.createElement('style');
+        style.id = 'change-pwd-styles';
+        style.textContent = `
+            .modal-overlay-change-pwd {
+                display: none; position: fixed; inset: 0;
+                background: rgba(0,0,0,0.5); z-index: 2000;
+                align-items: center; justify-content: center;
+            }
+            .modal-overlay-change-pwd.active { display: flex; }
+            .modal-box-change-pwd {
+                background: var(--bg-card); border-radius: var(--radius-lg);
+                padding: 2rem; width: 90%; max-width: 440px;
+                box-shadow: var(--shadow-lg); border: 1px solid var(--border);
+                animation: fadeInUp 0.25s ease;
+            }
+            .modal-pwd-header {
+                display: flex; justify-content: space-between; align-items: flex-start;
+                margin-bottom: 1.5rem;
+            }
+            .modal-pwd-title {
+                font-family: var(--font-display); font-size: 1.15rem;
+                font-weight: 700; color: var(--text); margin-bottom: 0.2rem;
+            }
+            .modal-pwd-desc { font-size: 0.8rem; color: var(--text-muted); }
+            .modal-pwd-close {
+                background: none; border: none; font-size: 1.4rem;
+                cursor: pointer; color: var(--text-muted); line-height: 1;
+                padding: 0; margin-left: 1rem; margin-top: -2px;
+            }
+            .modal-pwd-close:hover { color: var(--text); }
+            .pwd-input-wrap { position: relative; }
+            .pwd-input-wrap .form-control { padding-right: 2.5rem; }
+            .pwd-toggle {
+                position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
+                background: none; border: none; cursor: pointer; font-size: 0.95rem;
+                color: var(--text-muted); padding: 0; line-height: 1;
+            }
+            .pwd-toggle:hover { color: var(--text); }
+            .pwd-strength-bar {
+                height: 4px; background: var(--border); border-radius: 2px;
+                margin-top: 0.4rem; overflow: hidden;
+            }
+            .pwd-strength-fill {
+                height: 100%; border-radius: 2px; width: 0;
+                transition: width 0.3s ease, background 0.3s ease;
+            }
+            .pwd-strength-label {
+                font-size: 0.72rem; margin-top: 0.25rem; color: var(--text-muted);
+                min-height: 1rem;
+            }
+            [data-theme="dark"] .modal-box-change-pwd {
+                background: #1A1D26; border-color: #2A2D3A;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+function openChangePasswordModal() {
+    initChangePasswordModal();
+
+    // Limpiar campos (con guardas por si el modal aún no está en DOM)
+    const setClear = (id, prop, val) => { const el = document.getElementById(id); if (el) el[prop] = val; };
+    setClear('pwd-current',        'value', '');
+    setClear('pwd-new',            'value', '');
+    setClear('pwd-confirm',        'value', '');
+    setClear('pwd-strength-fill',  'style.width', '0');
+    setClear('pwd-strength-label', 'textContent', '');
+
+    const fill = document.getElementById('pwd-strength-fill');
+    if (fill) fill.style.background = '';
+
+    clearAlert('change-pwd-alert');
+
+    const modal = document.getElementById('modal-change-pwd');
+    if (modal) {
+        modal.classList.add('active');
+        setTimeout(() => {
+            const el = document.getElementById('pwd-current');
+            if (el) el.focus();
+        }, 100);
+    }
+}
+
+function closeChangePasswordModal() {
+    const m = document.getElementById('modal-change-pwd');
+    if (m) m.classList.remove('active');
+}
+
+function togglePwdVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        btn.textContent = '👁';
+    }
+}
+
+function checkPwdStrength(pwd) {
+    const fill  = document.getElementById('pwd-strength-fill');
+    const label = document.getElementById('pwd-strength-label');
+    if (!fill || !label) return;
+
+    let score = 0;
+    if (pwd.length >= 6)  score++;
+    if (pwd.length >= 10) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+    const levels = [
+        { pct: '0%',   color: '',          text: '' },
+        { pct: '25%',  color: '#E05C4F',   text: 'Muy débil' },
+        { pct: '50%',  color: '#E67E22',   text: 'Débil' },
+        { pct: '70%',  color: '#F0B429',   text: 'Aceptable' },
+        { pct: '85%',  color: '#3DAA7A',   text: 'Buena' },
+        { pct: '100%', color: '#2E7D5E',   text: 'Muy fuerte' },
+    ];
+    const lv = levels[Math.min(score, 5)];
+    fill.style.width      = lv.pct;
+    fill.style.background = lv.color;
+    label.textContent     = lv.text;
+    label.style.color     = lv.color || 'var(--text-muted)';
+}
+
+async function submitChangePassword() {
+    const current  = document.getElementById('pwd-current').value;
+    const newPwd   = document.getElementById('pwd-new').value;
+    const confirm  = document.getElementById('pwd-confirm').value;
+    const btn      = document.getElementById('btn-save-pwd');
+
+    clearAlert('change-pwd-alert');
+
+    if (!current) {
+        showAlert('change-pwd-alert', 'Ingresa tu contraseña actual.', 'danger'); return;
+    }
+    if (!newPwd || newPwd.length < 6) {
+        showAlert('change-pwd-alert', 'La nueva contraseña debe tener al menos 6 caracteres.', 'danger'); return;
+    }
+    if (newPwd !== confirm) {
+        showAlert('change-pwd-alert', 'Las contraseñas nuevas no coinciden.', 'danger'); return;
+    }
+    if (current === newPwd) {
+        showAlert('change-pwd-alert', 'La nueva contraseña debe ser diferente a la actual.', 'danger'); return;
+    }
+
+    setLoading(btn, true);
+    try {
+        await apiPost('/Auth/change-password', {
+            currentPassword: current,
+            newPassword:     newPwd,
+            confirmPassword: confirm
+        });
+        closeChangePasswordModal();
+        // Mostrar éxito brevemente en el contenedor de alertas de la página
+        const alertHost = document.getElementById('alert-container');
+        if (alertHost) showAlert('alert-container', '✅ Contraseña actualizada correctamente.', 'success');
+    } catch (err) {
+        showAlert('change-pwd-alert', err.message || 'Error al cambiar la contraseña.', 'danger');
+    } finally {
+        setLoading(btn, false);
+    }
+}

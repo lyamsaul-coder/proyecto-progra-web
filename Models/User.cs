@@ -58,6 +58,12 @@ namespace Proyecto_Progra_Web.API.Models
         [FirestoreProperty]
         public bool IsActive { get; set; } = true;
 
+        // Indica si el usuario debe cambiar su contrasena al iniciar sesion.
+        // Se activa en true cuando se le asigna una contrasena temporal via reset.
+        // Se desactiva en false cuando el usuario la cambia desde change-password.html.
+        [FirestoreProperty]
+        public bool RequiresPasswordChange { get; set; } = false;
+
         // Constructor vacio requerido por Firestore para deserializar documentos
         public User() { }
     }

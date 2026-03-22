@@ -136,7 +136,30 @@ app.UseCors("AllowAll");
 
 // Servir archivos estaticos desde la carpeta wwwroot
 // Permite acceder a los HTML desde https://localhost:puerto/login.html
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // Cache de 5 minutos para archivos estáticos
+        ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=300");
+    }
+});
+
+// Página 404 personalizada para rutas no encontradas
+app.Use(async (context, next) =>
+{
+    await next();
+    if (context.Response.StatusCode == 404
+        && !context.Request.Path.StartsWithSegments("/api")
+        && !context.Response.HasStarted)
+    {
+        context.Response.ContentType = "text/html";
+        context.Response.StatusCode  = 404;
+        var file404 = Path.Combine(app.Environment.WebRootPath, "404.html");
+        if (File.Exists(file404))
+            await context.Response.SendFileAsync(file404);
+    }
+});
 
 // UseAuthentication debe ir antes de UseAuthorization
 app.UseAuthentication();

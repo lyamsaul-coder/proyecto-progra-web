@@ -27,6 +27,10 @@ namespace Proyecto_Progra_Web.API.DTOs
 
         // Fechas de su reserva como texto legible, null si no ha reservado
         public string? ReservedDates { get; set; }
+
+        // Indica si el usuario debe cambiar su contrasena al iniciar sesion.
+        // El frontend lo usa para redirigir a change-password.html obligatoriamente.
+        public bool RequiresPasswordChange { get; set; }
     }
 
     // RegisterDto es lo que recibe el backend cuando alguien se registra
@@ -67,6 +71,21 @@ namespace Proyecto_Progra_Web.API.DTOs
 
         // Nueva contrasena que reemplazara a la anterior
         public string NewPassword { get; set; } = string.Empty;
+    }
+
+    // ChangePasswordDto es lo que recibe el endpoint change-password
+    // Requiere token JWT — solo el usuario autenticado puede cambiar su propia contrasena
+    public class ChangePasswordDto
+    {
+        // Contrasena actual (requerida para cambio desde sesion activa)
+        // Puede estar vacia solo cuando RequiresPasswordChange = true (contrasena temporal)
+        public string CurrentPassword { get; set; } = string.Empty;
+
+        // Nueva contrasena elegida por el usuario
+        public string NewPassword { get; set; } = string.Empty;
+
+        // Confirmacion — debe ser igual a NewPassword
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 
     // AuthResponseDto es la respuesta que devuelve el backend al registrar o iniciar sesion

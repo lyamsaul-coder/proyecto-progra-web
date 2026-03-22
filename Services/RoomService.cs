@@ -26,20 +26,44 @@ public class RoomService : IRoomService
     {
         try
         {
-            var roomsCollection = _firebaseService.GetCollection("rooms");
-            Query query = roomsCollection;
+            var roomsCollection        = _firebaseService.GetCollection("rooms");
+            var reservationsCollection = _firebaseService.GetCollection("reservations");
 
-            // Filtrar por tipo si se indica (Simple, Doble, Suite, etc.)
+            Query query = roomsCollection;
             if (!string.IsNullOrWhiteSpace(roomType))
                 query = query.WhereEqualTo("RoomType", roomType);
 
             var snapshot = await query.GetSnapshotAsync();
 
+            // Cargar todas las reservas activas y vigentes en memoria
+            // para calcular el estado real de ocupación sin depender de ReservationCount
+            var hondurasNow = DateTime.UtcNow.AddHours(-6);
+            var allResSnapshot = await reservationsCollection.GetSnapshotAsync();
+
+            // roomId → true si tiene al menos una reserva confirmada y no expirada
+            var activeByRoomId = new HashSet<string>();
+            foreach (var resDoc in allResSnapshot.Documents)
+            {
+                var d      = resDoc.ToDictionary();
+                var status = d.ContainsKey("Status") ? d["Status"].ToString() : "confirmed";
+                if (status == "cancelled") continue;
+
+                var checkOut = ((Google.Cloud.Firestore.Timestamp)d["CheckOutDate"]).ToDateTime();
+                if (checkOut < hondurasNow) continue; // ya expiró
+
+                var roomId = d.ContainsKey("RoomId") ? d["RoomId"].ToString()! : "";
+                if (!string.IsNullOrEmpty(roomId))
+                    activeByRoomId.Add(roomId);
+            }
+
             var rooms = new List<RoomDto>();
             foreach (var doc in snapshot.Documents)
             {
                 var room = MapDocumentToRoom(doc);
-                rooms.Add(ConvertToDto(room));
+                var dto  = ConvertToDto(room);
+                // Sobreescribir ReservationCount con el conteo real basado en fechas
+                dto.ReservationCount = activeByRoomId.Contains(room.Id) ? 1 : 0;
+                rooms.Add(dto);
             }
 
             return rooms;

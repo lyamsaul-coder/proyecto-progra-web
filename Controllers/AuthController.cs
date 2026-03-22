@@ -47,7 +47,6 @@ public class AuthController : ControllerBase
 
             _logger.LogInformation($"Usuario registrado: {user.Email}");
 
-            // Devolver 201 con datos basicos del usuario, sin contrasena ni hash
             return Created($"/api/auth/users/{user.Id}", new
             {
                 id = user.Id,
@@ -76,8 +75,8 @@ public class AuthController : ControllerBase
     // POST /api/auth/login
     // Cuerpo: { "email": "...", "password": "..." }
     // Respuesta 200: token JWT + datos del usuario
-    // El token debe enviarse en futuras peticiones como:
-    //   Authorization: Bearer {token}
+    // Si user.RequiresPasswordChange es true, el frontend redirige
+    // obligatoriamente a change-password.html antes de entrar al sistema.
     // --------------------------------------------------------
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
@@ -109,7 +108,9 @@ public class AuthController : ControllerBase
                     ProfilePictureUrl = user.ProfilePictureUrl,
                     HasReserved = user.HasReserved,
                     ReservedRoomId = user.ReservedRoomId,
-                    ReservedDates = user.ReservedDates
+                    ReservedDates = user.ReservedDates,
+                    // El frontend usa este campo para redirigir a change-password.html
+                    RequiresPasswordChange = user.RequiresPasswordChange
                 }
             };
 
@@ -131,11 +132,10 @@ public class AuthController : ControllerBase
     }
 
     // --------------------------------------------------------
-    // --------------------------------------------------------
     // POST /api/auth/forgot-password
     // Verifica si el email existe en el sistema
     // Cuerpo: { "email": "usuario@example.com" }
-    // Respuesta 200: confirmacion de que el email existe o no
+    // Respuesta 200: confirmacion de que el email existe
     // --------------------------------------------------------
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
@@ -169,9 +169,9 @@ public class AuthController : ControllerBase
 
     // --------------------------------------------------------
     // POST /api/auth/reset-password
-    // Actualiza la contrasena del usuario identificado por email
+    // Actualiza la contrasena y activa RequiresPasswordChange = true
+    // para forzar al usuario a cambiarla al iniciar sesion.
     // Cuerpo: { "email": "usuario@example.com", "newPassword": "nueva123" }
-    // Respuesta 200: confirmacion de contrasena actualizada
     // --------------------------------------------------------
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPasswordDto)
@@ -187,11 +187,12 @@ public class AuthController : ControllerBase
             if (string.IsNullOrWhiteSpace(resetPasswordDto.NewPassword))
                 return BadRequest(new { message = "La nueva contrasena es requerida" });
 
+            // Guarda la contrasena temporal Y activa RequiresPasswordChange = true
             await _authService.ResetPassword(resetPasswordDto.Email, resetPasswordDto.NewPassword);
 
-            _logger.LogInformation($"Contrasena restablecida para: {resetPasswordDto.Email}");
+            _logger.LogInformation($"Contrasena temporal asignada para: {resetPasswordDto.Email}");
 
-            return Ok(new { message = "Contrasena actualizada exitosamente. Ya puede iniciar sesion." });
+            return Ok(new { message = "Contrasena temporal asignada. El usuario debera cambiarla al iniciar sesion." });
         }
         catch (ArgumentException ex)
         {
@@ -208,6 +209,65 @@ public class AuthController : ControllerBase
         }
     }
 
+    // --------------------------------------------------------
+    // POST /api/auth/change-password
+    // Cambia la contrasena del usuario autenticado y desactiva RequiresPasswordChange.
+    // Requiere token JWT valido.
+    // Cuerpo: { "newPassword": "...", "confirmPassword": "..." }
+    // --------------------------------------------------------
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
+    {
+        try
+        {
+            if (changePasswordDto == null)
+                return BadRequest(new { message = "El cuerpo de la peticion es requerido" });
+
+            if (string.IsNullOrWhiteSpace(changePasswordDto.NewPassword))
+                return BadRequest(new { message = "La nueva contrasena es requerida" });
+
+            if (changePasswordDto.NewPassword != changePasswordDto.ConfirmPassword)
+                return BadRequest(new { message = "Las contrasenas no coinciden" });
+
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { message = "Token invalido" });
+
+            var user = await _authService.GetUserById(userId);
+            if (user == null)
+                return NotFound(new { message = "Usuario no encontrado" });
+
+            // Si el usuario NO tiene contrasena temporal, verificar la contrasena actual
+            if (!user.RequiresPasswordChange)
+            {
+                if (string.IsNullOrWhiteSpace(changePasswordDto.CurrentPassword))
+                    return BadRequest(new { message = "Debes ingresar tu contrasena actual" });
+
+                var currentValid = await _authService.VerifyCurrentPassword(userId, changePasswordDto.CurrentPassword);
+                if (!currentValid)
+                    return BadRequest(new { message = "La contrasena actual es incorrecta" });
+            }
+
+            // Cambia la contrasena y desactiva RequiresPasswordChange
+            await _authService.ChangePassword(userId, user.Email, changePasswordDto.NewPassword);
+
+            _logger.LogInformation($"Contrasena cambiada por el usuario: {user.Email}");
+
+            return Ok(new { message = "Contrasena actualizada exitosamente." });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error en ChangePassword: {ex.Message}");
+            return StatusCode(500, new { message = "Error al cambiar la contrasena" });
+        }
+    }
+
+    // --------------------------------------------------------
     // GET /api/auth/users/{userId}
     // Header: Authorization: Bearer {token}
     // Respuesta 200: datos publicos del usuario
@@ -234,7 +294,8 @@ public class AuthController : ControllerBase
                 ProfilePictureUrl = user.ProfilePictureUrl,
                 HasReserved = user.HasReserved,
                 ReservedRoomId = user.ReservedRoomId,
-                ReservedDates = user.ReservedDates
+                ReservedDates = user.ReservedDates,
+                RequiresPasswordChange = user.RequiresPasswordChange
             });
         }
         catch (Exception ex)

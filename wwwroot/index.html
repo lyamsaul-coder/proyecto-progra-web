@@ -73,10 +73,9 @@
         .hero-nav-links a:hover { color: var(--primary); }
 
         .btn-hero {
-            background: var(--accent);
-            color: white;
-            padding: 0.6rem 1.5rem;
-            border-radius: var(--radius-sm);
+            background: none;
+            color: var(--text);
+            padding: 0.6rem 0;
             font-weight: 700;
             font-size: 0.9rem;
             text-decoration: none;
@@ -84,8 +83,15 @@
         }
 
         .btn-hero:hover {
-            background: var(--accent-light);
-            box-shadow: 0 4px 15px rgba(212, 168, 83, 0.4);
+            color: var(--primary);
+        }
+
+        [data-theme="dark"] .btn-hero {
+            color: var(--text);
+        }
+
+        [data-theme="dark"] .btn-hero:hover {
+            color: var(--primary);
         }
 
         .hero-content {
@@ -616,6 +622,113 @@
             .catalog-grid { grid-template-columns: 1fr; }
         }
 
+        /* ---- Sección reseñas ---- */
+        .reviews-section {
+            padding: 5rem 2rem;
+            background: white;
+        }
+
+        [data-theme="dark"] .reviews-section { background: #12141c; }
+
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .review-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            position: relative;
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+
+        .review-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .review-stars {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 0.75rem;
+        }
+
+        .review-star {
+            color: #f59e0b;
+            font-size: 1rem;
+        }
+
+        .review-star.empty { color: #d1d5db; }
+
+        .review-comment {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 1.25rem;
+            font-style: italic;
+        }
+
+        .review-comment::before { content: '"'; }
+        .review-comment::after  { content: '"'; }
+
+        .review-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+        }
+
+        .review-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 0.85rem; font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .review-author { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+        .review-room   { font-size: 0.75rem; color: var(--text-muted); }
+        .review-date   { font-size: 0.72rem; color: var(--text-muted); margin-left: auto; }
+
+        .reviews-summary {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .reviews-avg {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .reviews-avg-stars {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+            margin: 0.4rem 0 0.25rem;
+        }
+
+        .reviews-avg-star { color: #f59e0b; font-size: 1.3rem; }
+        .reviews-count    { font-size: 0.85rem; color: var(--text-muted); }
+
+        [data-theme="dark"] .review-card { background: #1A1D26; border-color: #2A2D3A; }
+        [data-theme="dark"] .review-meta { border-color: #2A2D3A; }
+        [data-theme="dark"] .review-author { color: #E8EAF0; }
+
+        @media (max-width: 768px) {
+            .reviews-section { padding: 3rem 1.25rem; }
+            .reviews-grid { grid-template-columns: 1fr; }
+        }
+
         @media (max-width: 768px) {
             .hero-nav { padding: 1.5rem; }
             .hero-content { padding: 2rem 1.5rem; flex-direction: column; }
@@ -625,6 +738,7 @@
             .features-grid { grid-template-columns: 1fr; }
             .cta { padding: 3rem 1.5rem; }
         }
+
     </style>
 </head>
 <body>
@@ -633,6 +747,9 @@
     <nav class="hero-nav">
         <a href="/" class="hero-brand">Pro<span>Book</span></a>
         <div class="hero-nav-links">
+            <a href="#features" onclick="smoothTo('features')">Funciones</a>
+            <a href="#catalog"  onclick="smoothTo('catalog')">Habitaciones</a>
+            <a href="#reviews-section" onclick="smoothTo('reviews-section')">Reseñas</a>
             <button class="theme-toggle" onclick="toggleTheme()" style="border-color:rgba(44,95,138,0.3)">
                 <span>🌙</span> Oscuro
             </button>
@@ -664,7 +781,7 @@
     </div>
 </section>
 
-<section class="features">
+<section class="features" id="features">
     <div class="section-header">
         <div class="section-tag">Funcionalidades</div>
         <h2 class="section-title">Todo lo que necesitas para gestionar tu hotel</h2>
@@ -709,7 +826,7 @@
      CATALOGO PUBLICO DE HABITACIONES
      Datos en vivo desde GET /api/rooms (sin auth)
      ============================================================ -->
-<section class="catalog">
+<section class="catalog" id="catalog">
     <div class="catalog-inner">
         <div class="section-header">
             <div class="section-tag">Disponible ahora</div>
@@ -757,7 +874,21 @@
     </div>
 </section>
 
-<section class="cta">
+
+<!-- ============================================================
+     PRICING SECTION
+     ============================================================ -->
+<section class="reviews-section" id="reviews-section" style="display:none">
+    <div class="section-header">
+        <div class="section-tag">Opiniones</div>
+        <h2 class="section-title">Lo que dicen nuestros huéspedes</h2>
+        <p class="section-desc">Reseñas reales de quienes ya se hospedaron con nosotros.</p>
+    </div>
+    <div class="reviews-summary" id="reviews-summary"></div>
+    <div class="reviews-grid" id="reviews-grid"></div>
+</section>
+
+<section class="cta" id="cta">
     <div class="cta-content">
         <h2 class="cta-title">Listo para digitalizar tu hotel?</h2>
         <p class="cta-desc">Registrate ahora y comienza a gestionar tus reservas de forma eficiente.</p>
@@ -792,7 +923,8 @@
     }
 
     function fmtCurrency(n) {
-        return 'L. ' + parseFloat(n).toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const c = window._currency || { symbol: 'L.', locale: 'es-HN' };
+        return c.symbol + ' ' + parseFloat(n).toLocaleString(c.locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     let _allRooms = [];
@@ -880,7 +1012,84 @@
         }).join('');
     }
 
-    document.addEventListener('DOMContentLoaded', loadCatalog);
+
+    // ---- Sección de reseñas ----
+    async function loadReviews() {
+        try {
+            const API = window.location.origin + '/api';
+            const res  = await fetch(`${API}/Rooms/all-reviews?limit=9`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const reviews = data.reviews || [];
+            if (!reviews.length) return;
+
+            const section = document.getElementById('reviews-section');
+            const grid    = document.getElementById('reviews-grid');
+            const summary = document.getElementById('reviews-summary');
+            if (!section || !grid) return;
+
+            // Calcular promedio global
+            const avg = reviews.reduce((s, r) => s + r.stars, 0) / reviews.length;
+            const avgRounded = Math.round(avg * 10) / 10;
+            const fullStars = Math.floor(avgRounded);
+            const starsHtml = Array.from({length: 5}, (_, i) =>
+                `<span class="reviews-avg-star">${i < fullStars ? '★' : '☆'}</span>`
+            ).join('');
+
+            summary.innerHTML = `
+                <div class="reviews-avg">${avgRounded.toFixed(1)}</div>
+                <div class="reviews-avg-stars">${starsHtml}</div>
+                <div class="reviews-count">Basado en ${reviews.length} reseña${reviews.length !== 1 ? 's' : ''} verificada${reviews.length !== 1 ? 's' : ''}</div>`;
+
+            grid.innerHTML = reviews.map(r => {
+                const starsHtml = Array.from({length: 5}, (_, i) =>
+                    `<span class="review-star ${i < r.stars ? '' : 'empty'}">★</span>`
+                ).join('');
+                const initials = (r.userName || 'H').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+                const comment  = r.comment.length > 180 ? r.comment.slice(0, 180) + '…' : r.comment;
+                return `
+                <div class="review-card">
+                    <div class="review-stars">${starsHtml}</div>
+                    <p class="review-comment">${comment}</p>
+                    <div class="review-meta">
+                        <div class="review-avatar">${initials}</div>
+                        <div>
+                            <div class="review-author">${r.userName}</div>
+                            <div class="review-room">Hab. ${r.roomNumber}</div>
+                        </div>
+                        <span class="review-date">${r.createdAt}</span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            section.style.display = '';
+        } catch { /* si falla, la sección no aparece */ }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadCatalog();
+        loadReviews();
+        initStickyNav();
+    });
+
+    // ---- Scroll suave ----
+    function smoothTo(id) {
+        event.preventDefault();
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ---- Navbar sticky al hacer scroll ----
+    function initStickyNav() {
+        const nav = document.querySelector('.hero-nav');
+        if (!nav) return;
+        const onScroll = () => {
+            nav.style.boxShadow = window.scrollY > 60
+                ? '0 2px 20px rgba(0,0,0,0.12)'
+                : 'none';
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+    }
 </script>
 
 <script>

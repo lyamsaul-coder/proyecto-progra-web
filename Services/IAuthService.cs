@@ -39,7 +39,12 @@ public interface IAuthService
     // Devuelve true si existe, false si no
     Task<bool> ForgotPassword(string email);
 
-    // Actualizar la contrasena del usuario identificado por email
-    // Lanza InvalidOperationException si el email no existe
+    // Asignar una contrasena temporal e indicar que el usuario debe cambiarla
+    // al iniciar sesion (activa RequiresPasswordChange = true en Firestore)
     Task ResetPassword(string email, string newPassword);
+
+    // Cambiar la contrasena desde dentro de una sesion activa
+    // Desactiva RequiresPasswordChange despues de guardar
+    Task<bool> VerifyCurrentPassword(string userId, string currentPassword);
+    Task ChangePassword(string userId, string email, string newPassword);
 }

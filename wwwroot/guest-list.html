@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProBook - Huespedes</title>
     <link rel="stylesheet" href="/css/styles.css">
@@ -44,6 +47,128 @@
             color: var(--text-muted);
         }
 
+        .btn-cancel {
+            padding: 0.3rem 0.7rem;
+            font-size: 0.75rem;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--danger);
+            background: transparent;
+            color: var(--danger);
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .btn-cancel:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-block {
+            padding: 0.3rem 0.7rem;
+            font-size: 0.75rem;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--text-muted);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .btn-block:hover {
+            background: var(--text-muted);
+            color: white;
+        }
+
+        .btn-reserve {
+            padding: 0.3rem 0.7rem;
+            font-size: 0.75rem;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        .btn-reserve:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        /* Modal de confirmacion */
+        .confirm-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirm-modal-overlay.active {
+            display: flex;
+        }
+
+        .confirm-modal {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+        }
+
+        .confirm-modal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .confirm-modal-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .confirm-modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        /* Columnas ordenables */
+        .sortable-th {
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            transition: color 0.15s;
+        }
+        .sortable-th:hover { color: var(--primary); }
+        .sort-icon {
+            display: inline-block;
+            width: 14px;
+            font-size: 0.7rem;
+            opacity: 0.4;
+            margin-left: 2px;
+        }
+        .sort-icon.asc  { opacity: 1; }
+        .sort-icon.desc { opacity: 1; }
+        th.sort-active  { color: var(--primary); }
+
         [data-theme="dark"] .filter-btn {
             background: #1A1D26 !important;
             border-color: #2A2D3A;
@@ -53,7 +178,33 @@
             background: #4A90C4 !important;
             color: white;
         }
-        [data-theme="dark"] .stats-summary { background: #1A1D26; border-color: #2A2D3A; }
+        [data-theme="dark"] .confirm-modal {
+            background: #1A1D26;
+            border-color: #2A2D3A;
+        }
+
+        .reserve-room-option {
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem;
+            text-align: left;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+        }
+        .reserve-room-option:hover {
+            border-color: var(--primary);
+            background: rgba(44,95,138,0.06);
+        }
+        [data-theme="dark"] .reserve-room-option {
+            background: #12141c;
+            border-color: #2A2D3A;
+        }
+        [data-theme="dark"] .reserve-room-option:hover {
+            border-color: #4A90C4;
+            background: rgba(74,144,196,0.08);
+        }
     </style>
 </head>
 <body>
@@ -75,6 +226,10 @@
             <a href="/reports.html" class="sidebar-link">📈 Reportes</a>
         </div>
         <div class="sidebar-section">
+            <div class="sidebar-label">Sistema</div>
+            <a href="/settings.html" class="sidebar-link">⚙️ Configuracion</a>
+        </div>
+        <div class="sidebar-section">
             <div class="sidebar-label">Cuenta</div>
             <button class="sidebar-link" onclick="logout()">🚪 Cerrar sesion</button>
         </div>
@@ -86,6 +241,8 @@
             <h1 class="page-title">Huespedes</h1>
             <p class="page-subtitle">Lista de huespedes registrados y estado de reservas</p>
         </div>
+
+        <div id="alert-container" style="margin-bottom:1rem"></div>
 
         <!-- Resumen -->
         <div class="summary-cards">
@@ -106,7 +263,7 @@
             </div>
         </div>
 
-        <!-- Filtros y busqueda -->
+        <!-- Filtros -->
         <div class="filter-bar">
             <input type="text" id="search-input" class="form-control"
                    placeholder="Buscar por nombre o email..."
@@ -123,16 +280,29 @@
                 <table>
                     <thead>
                     <tr>
-                        <th>Huesped</th>
-                        <th>Estado</th>
-                        <th>Habitacion</th>
-                        <th>Fechas</th>
-                        <th>Noches</th>
-                        <th>Total</th>
+                        <th class="sortable-th" onclick="sortBy('fullname')">
+                            Huesped <span id="sort-fullname" class="sort-icon"></span>
+                        </th>
+                        <th class="sortable-th" onclick="sortBy('reservationStatus')">
+                            Estado <span id="sort-reservationStatus" class="sort-icon"></span>
+                        </th>
+                        <th class="sortable-th" onclick="sortBy('roomNumber')">
+                            Habitacion <span id="sort-roomNumber" class="sort-icon"></span>
+                        </th>
+                        <th class="sortable-th" onclick="sortBy('checkInDate')">
+                            Fechas <span id="sort-checkInDate" class="sort-icon"></span>
+                        </th>
+                        <th class="sortable-th" onclick="sortBy('nights')">
+                            Noches <span id="sort-nights" class="sort-icon"></span>
+                        </th>
+                        <th class="sortable-th" onclick="sortBy('totalCost')">
+                            Total <span id="sort-totalCost" class="sort-icon"></span>
+                        </th>
+                        <th>Acciones</th>
                     </tr>
                     </thead>
                     <tbody id="guests-table">
-                    <tr><td colspan="6" class="text-center" style="padding:2rem">
+                    <tr><td colspan="7" class="text-center" style="padding:2rem">
                         <span class="spinner spinner-primary"></span>
                     </td></tr>
                     </tbody>
@@ -142,15 +312,76 @@
     </main>
 </div>
 
+<!-- Modal de confirmacion -->
+<div id="confirm-modal" class="confirm-modal-overlay">
+    <div class="confirm-modal">
+        <div class="confirm-modal-title" id="confirm-title">Confirmar accion</div>
+        <div class="confirm-modal-desc" id="confirm-desc"></div>
+        <div class="confirm-modal-actions">
+            <button class="btn btn-outline" onclick="closeConfirm()">Cancelar</button>
+            <button id="confirm-btn" class="btn btn-danger" onclick="executeConfirm()">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal reservar en nombre del huesped -->
+<div id="reserve-modal" class="confirm-modal-overlay">
+    <div class="confirm-modal" style="max-width:520px">
+        <div class="confirm-modal-title">Crear reserva para huesped</div>
+        <div id="reserve-guest-name" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.25rem"></div>
+        <div id="reserve-alert" style="margin-bottom:0.75rem"></div>
+
+        <!-- Paso 1: seleccionar fechas -->
+        <div id="reserve-step-dates">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem">
+                <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label">Fecha de entrada</label>
+                    <input type="date" id="reserve-checkin" class="form-control" onchange="onReserveDatesChange()">
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label">Fecha de salida</label>
+                    <input type="date" id="reserve-checkout" class="form-control" onchange="onReserveDatesChange()">
+                </div>
+            </div>
+            <div id="reserve-rooms-container" style="display:none">
+                <div style="font-size:0.82rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.6rem">
+                    Habitaciones disponibles
+                </div>
+                <div id="reserve-rooms-list" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;max-height:220px;overflow-y:auto"></div>
+            </div>
+            <div id="reserve-rooms-loading" style="display:none;font-size:0.85rem;color:var(--text-muted);padding:0.5rem 0">
+                <span class="spinner spinner-primary" style="width:14px;height:14px;border-width:2px"></span> Buscando disponibilidad...
+            </div>
+        </div>
+
+        <!-- Paso 2: resumen de la reserva seleccionada -->
+        <div id="reserve-step-confirm" style="display:none">
+            <div id="reserve-selected-summary" style="background:var(--bg);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;font-size:0.875rem"></div>
+            <button class="btn btn-outline btn-sm" onclick="reserveGoBack()" style="margin-bottom:0.75rem">← Cambiar habitacion</button>
+        </div>
+
+        <div class="confirm-modal-actions">
+            <button class="btn btn-outline" onclick="closeReserveModal()">Cancelar</button>
+            <button id="btn-confirm-reserve" class="btn btn-primary" onclick="executeReserve()" disabled>Confirmar reserva</button>
+        </div>
+    </div>
+</div>
+
 <script src="/js/app.js"></script>
 <script>
     requireAuth('manager');
     renderNavbar('manager');
 
-    let allGuests = [];
+    let allGuests     = [];
     let currentFilter = 'all';
+    let pendingAction = null; // { type: 'cancel'|'block', id, name }
+    let sortColumn    = 'fullname';
+    let sortDirection = 'asc'; // 'asc' | 'desc'
 
     loadGuests();
+    // Mostrar icono de ordenamiento inicial
+    document.addEventListener('DOMContentLoaded', () => updateSortIcons());
 
     async function loadGuests() {
         try {
@@ -164,8 +395,8 @@
             renderGuests(allGuests);
         } catch (error) {
             document.getElementById('guests-table').innerHTML =
-                `<tr><td colspan="6" class="text-center text-muted" style="padding:2rem">
-                        Error al cargar huespedes: ${error.message}</td></tr>`;
+                `<tr><td colspan="7" class="text-center text-muted" style="padding:2rem">
+                    Error al cargar huespedes: ${error.message}</td></tr>`;
         }
     }
 
@@ -173,34 +404,184 @@
         const tbody = document.getElementById('guests-table');
 
         if (guests.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding:2rem">
-                    <div class="empty-state-icon">👥</div>
-                    <div class="empty-state-title">No hay huespedes</div>
-                </td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:2rem">
+                <div class="empty-state-icon">👥</div>
+                <div class="empty-state-title">No hay huespedes</div>
+            </td></tr>`;
             return;
         }
 
-        tbody.innerHTML = guests.map(g => `
-                <tr>
-                    <td>
-                        <div style="font-weight:600">${g.fullname}</div>
-                        <div class="guest-email">${g.email}</div>
-                    </td>
-                    <td>${getStatusBadge(g.reservationStatus)}</td>
-                    <td>${g.roomNumber
-            ? `<strong>Hab. ${g.roomNumber}</strong><br>
-                           <span style="font-size:0.78rem;color:var(--text-muted)">${g.roomType}</span>`
-            : '<span class="text-muted">-</span>'
-        }</td>
-                    <td style="font-size:0.85rem">${g.checkInDate
-            ? `${formatDate(g.checkInDate)}<br>
-                           <span style="color:var(--text-muted)">→ ${formatDate(g.checkOutDate)}</span>`
-            : '<span class="text-muted">-</span>'
-        }</td>
-                    <td>${g.nights != null ? g.nights : '-'}</td>
-                    <td>${g.totalCost != null ? formatCurrency(g.totalCost) : '-'}</td>
-                </tr>
-            `).join('');
+        tbody.innerHTML = guests.map(g => {
+            // Botones de accion segun el estado del huesped
+            let actions = '';
+
+            // Boton cancelar reserva: solo si tiene reserva activa (confirmada, no expirada, no cancelada)
+            if (g.hasReserved && g.reservationStatus === 'confirmed' && !g.hasExpired && g.reservationId) {
+                actions += `<button class="btn-cancel"
+                    onclick="confirmCancel('${g.reservationId}', '${escapeHtml(g.fullname)}')">
+                    Cancelar reserva
+                </button>`;
+            }
+
+            // Boton reservar: solo si el huesped NO tiene reserva activa
+            if (!g.hasReserved && g.reservationStatus !== 'confirmed') {
+                actions += `<button class="btn-reserve"
+                    onclick="openReserveModal('${g.userId}', '${escapeHtml(g.fullname)}')">
+                    ＋ Reservar
+                </button>`;
+            }
+
+            // Boton bloquear: siempre disponible para el gerente
+            actions += `<button class="btn-block"
+                onclick="confirmBlock('${g.userId}', '${escapeHtml(g.fullname)}')">
+                Bloquear cuenta
+            </button>`;
+
+            return `
+            <tr>
+                <td>
+                    <div style="font-weight:600">${g.fullname}</div>
+                    <div class="guest-email">${g.email}</div>
+                </td>
+                <td>${getStatusBadge(g.reservationStatus)}</td>
+                <td>${g.roomNumber
+                ? `<strong>Hab. ${g.roomNumber}</strong><br>
+                       <span style="font-size:0.78rem;color:var(--text-muted)">${g.roomType}</span>`
+                : '<span class="text-muted">-</span>'
+            }</td>
+                <td style="font-size:0.85rem">${g.checkInDate
+                ? `${formatDate(g.checkInDate)}<br>
+                       <span style="color:var(--text-muted)">→ ${formatDate(g.checkOutDate)}</span>`
+                : '<span class="text-muted">-</span>'
+            }</td>
+                <td>${g.nights != null ? g.nights : '-'}</td>
+                <td>${g.totalCost != null ? formatCurrency(g.totalCost) : '-'}</td>
+                <td><div class="actions-cell">${actions}</div></td>
+            </tr>`;
+        }).join('');
+    }
+
+    // ---- Confirmacion de cancelar reserva ----
+
+    function confirmCancel(reservationId, guestName) {
+        pendingAction = { type: 'cancel', id: reservationId };
+        document.getElementById('confirm-title').textContent = 'Cancelar reserva';
+        document.getElementById('confirm-desc').textContent =
+            `¿Cancelar la reserva de ${guestName}? La habitacion quedara disponible y el huesped podra volver a reservar.`;
+        document.getElementById('confirm-btn').textContent = 'Si, cancelar';
+        document.getElementById('confirm-btn').className = 'btn btn-danger';
+        document.getElementById('confirm-modal').classList.add('active');
+    }
+
+    // ---- Confirmacion de bloquear huesped ----
+
+    function confirmBlock(userId, guestName) {
+        pendingAction = { type: 'block', id: userId };
+        document.getElementById('confirm-title').textContent = 'Bloquear cuenta';
+        document.getElementById('confirm-desc').textContent =
+            `¿Bloquear la cuenta de ${guestName}? No podra iniciar sesion en el sistema. Esta accion es permanente.`;
+        document.getElementById('confirm-btn').textContent = 'Si, bloquear';
+        document.getElementById('confirm-btn').className = 'btn btn-danger';
+        document.getElementById('confirm-modal').classList.add('active');
+    }
+
+    function closeConfirm() {
+        pendingAction = null;
+        document.getElementById('confirm-modal').classList.remove('active');
+    }
+
+    async function executeConfirm() {
+        if (!pendingAction) return;
+
+        const btn = document.getElementById('confirm-btn');
+        setLoading(btn, true);
+        clearAlert('alert-container');
+
+        try {
+            if (pendingAction.type === 'cancel') {
+                await apiPut(`/Reservations/${pendingAction.id}/cancel`, {});
+                showAlert('alert-container', 'Reserva cancelada. El huesped puede volver a reservar.', 'success');
+            } else if (pendingAction.type === 'block') {
+                await apiPut(`/Reservations/guests/${pendingAction.id}/block`, {});
+                showAlert('alert-container', 'Cuenta del huesped bloqueada permanentemente.', 'success');
+            }
+            closeConfirm();
+            // Recargar la lista para reflejar el cambio
+            await loadGuests();
+        } catch (error) {
+            closeConfirm();
+            showAlert('alert-container', error.message || 'Error al ejecutar la accion.', 'danger');
+        } finally {
+            setLoading(btn, false);
+        }
+    }
+
+    // ---- Filtros ----
+
+    // ---- Ordenamiento por columna ----
+
+    function sortBy(column) {
+        if (sortColumn === column) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortColumn    = column;
+            sortDirection = 'asc';
+        }
+        updateSortIcons();
+        applyFilters();
+    }
+
+    function updateSortIcons() {
+        // Resetear todos
+        document.querySelectorAll('.sort-icon').forEach(el => {
+            el.textContent = '↕';
+            el.className   = 'sort-icon';
+        });
+        document.querySelectorAll('.sortable-th').forEach(el => el.classList.remove('sort-active'));
+
+        // Marcar el activo
+        const icon = document.getElementById(`sort-${sortColumn}`);
+        if (icon) {
+            icon.textContent = sortDirection === 'asc' ? '↑' : '↓';
+            icon.className   = `sort-icon ${sortDirection}`;
+            icon.closest('th')?.classList.add('sort-active');
+        }
+    }
+
+    function sortGuests(list) {
+        return [...list].sort((a, b) => {
+            let va = a[sortColumn];
+            let vb = b[sortColumn];
+
+            // Nulos al final siempre
+            if (va == null && vb == null) return 0;
+            if (va == null) return 1;
+            if (vb == null) return -1;
+
+            // Columnas numéricas
+            if (sortColumn === 'nights' || sortColumn === 'totalCost') {
+                va = parseFloat(va) || 0;
+                vb = parseFloat(vb) || 0;
+                return sortDirection === 'asc' ? va - vb : vb - va;
+            }
+
+            // Fechas en formato "dd-MM-yyyy"
+            if (sortColumn === 'checkInDate' || sortColumn === 'checkOutDate') {
+                const toTs = s => {
+                    if (!s) return 0;
+                    const p = s.split('-');
+                    return new Date(`${p[2]}-${p[1]}-${p[0]}`).getTime();
+                };
+                return sortDirection === 'asc' ? toTs(va) - toTs(vb) : toTs(vb) - toTs(va);
+            }
+
+            // Texto (fullname, roomNumber, reservationStatus)
+            va = String(va).toLowerCase();
+            vb = String(vb).toLowerCase();
+            if (va < vb) return sortDirection === 'asc' ? -1 :  1;
+            if (va > vb) return sortDirection === 'asc' ?  1 : -1;
+            return 0;
+        });
     }
 
     function setFilter(filter, btn) {
@@ -230,7 +611,140 @@
             return matchesSearch && matchesFilter;
         });
 
-        renderGuests(filtered);
+        renderGuests(sortGuests(filtered));
+    }
+
+    // Escapa caracteres especiales para no romper el HTML en los atributos onclick
+    function escapeHtml(str) {
+        return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // ---- Reservar en nombre del huesped (solo manager) ----
+
+    let reserveTargetUserId = null;
+    let reserveSelectedRoom  = null; // { roomNumber, roomType, baseRate }
+    let reserveDatesTimer    = null;
+
+    function openReserveModal(userId, guestName) {
+        reserveTargetUserId  = userId;
+        reserveSelectedRoom  = null;
+        document.getElementById('reserve-guest-name').textContent = 'Huesped: ' + guestName;
+        document.getElementById('reserve-checkin').value  = '';
+        document.getElementById('reserve-checkout').value = '';
+        document.getElementById('reserve-rooms-container').style.display = 'none';
+        document.getElementById('reserve-rooms-loading').style.display   = 'none';
+        document.getElementById('reserve-step-dates').style.display   = '';
+        document.getElementById('reserve-step-confirm').style.display  = 'none';
+        document.getElementById('btn-confirm-reserve').disabled = true;
+        clearAlert('reserve-alert');
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('reserve-checkin').min  = today;
+        document.getElementById('reserve-checkout').min = today;
+        document.getElementById('reserve-modal').classList.add('active');
+    }
+
+    function closeReserveModal() {
+        reserveTargetUserId = null;
+        reserveSelectedRoom  = null;
+        document.getElementById('reserve-modal').classList.remove('active');
+    }
+
+    function reserveGoBack() {
+        reserveSelectedRoom = null;
+        document.getElementById('reserve-step-dates').style.display  = '';
+        document.getElementById('reserve-step-confirm').style.display = 'none';
+        document.getElementById('btn-confirm-reserve').disabled = true;
+    }
+
+    function onReserveDatesChange() {
+        const checkIn  = document.getElementById('reserve-checkin').value;
+        const checkOut = document.getElementById('reserve-checkout').value;
+
+        // Ajustar mínimo de checkout cuando cambia checkin
+        if (checkIn) document.getElementById('reserve-checkout').min = checkIn;
+
+        document.getElementById('reserve-rooms-container').style.display = 'none';
+        document.getElementById('reserve-rooms-loading').style.display   = 'none';
+        document.getElementById('btn-confirm-reserve').disabled = true;
+        reserveSelectedRoom = null;
+
+        if (!checkIn || !checkOut || checkIn >= checkOut) return;
+
+        clearTimeout(reserveDatesTimer);
+        document.getElementById('reserve-rooms-loading').style.display = 'block';
+        reserveDatesTimer = setTimeout(() => loadAvailableRoomsForManager(checkIn, checkOut), 500);
+    }
+
+    async function loadAvailableRoomsForManager(checkIn, checkOut) {
+        try {
+            const checkInApi  = inputDateToApi(checkIn);
+            const checkOutApi = inputDateToApi(checkOut);
+            const data        = await apiGet(`/Rooms/available?checkIn=${checkInApi}&checkOut=${checkOutApi}`);
+            const rooms       = data.rooms || data; // el endpoint devuelve { rooms: [...] }
+
+            document.getElementById('reserve-rooms-loading').style.display = 'none';
+
+            if (!rooms || rooms.length === 0) {
+                document.getElementById('reserve-rooms-list').innerHTML =
+                    '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);font-size:0.85rem;padding:0.75rem">Sin habitaciones disponibles en esas fechas.</div>';
+                document.getElementById('reserve-rooms-container').style.display = 'block';
+                return;
+            }
+
+            const nights = data.nights || Math.round((new Date(checkOut) - new Date(checkIn)) / (1000*60*60*24));
+
+            document.getElementById('reserve-rooms-list').innerHTML = rooms.map(r => `
+                <button class="reserve-room-option" onclick="selectRoomForManager('${r.roomNumber}','${r.roomType}',${r.baseRate || 0},'${checkIn}','${checkOut}',${nights},${r.estimatedTotal || 0})">
+                    <div style="font-weight:700;font-size:0.9rem">Hab. ${r.roomNumber}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted)">${r.roomType}</div>
+                    <div style="font-size:0.78rem;color:var(--primary);font-weight:600;margin-top:0.2rem">${formatCurrency(r.estimatedTotal || r.baseRate * nights * 1.15)} total</div>
+                </button>
+            `).join('');
+            document.getElementById('reserve-rooms-container').style.display = 'block';
+        } catch (err) {
+            document.getElementById('reserve-rooms-loading').style.display = 'none';
+            showAlert('reserve-alert', 'Error al buscar habitaciones: ' + err.message, 'danger');
+        }
+    }
+
+    function selectRoomForManager(roomNumber, roomType, baseRate, checkIn, checkOut, nights, estimatedTotal) {
+        reserveSelectedRoom = { roomNumber, checkIn, checkOut };
+        const total = formatCurrency(estimatedTotal || baseRate * nights * 1.15);
+
+        document.getElementById('reserve-selected-summary').innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+                <div><span style="color:var(--text-muted)">Habitacion</span><br><strong>Hab. ${roomNumber} — ${roomType}</strong></div>
+                <div><span style="color:var(--text-muted)">Total estimado</span><br><strong style="color:var(--primary)">${total}</strong></div>
+                <div><span style="color:var(--text-muted)">Check-in</span><br><strong>${formatDate(inputDateToApi(checkIn))}</strong></div>
+                <div><span style="color:var(--text-muted)">Check-out</span><br><strong>${formatDate(inputDateToApi(checkOut))}</strong></div>
+                <div><span style="color:var(--text-muted)">Noches</span><br><strong>${nights}</strong></div>
+            </div>`;
+
+        document.getElementById('reserve-step-dates').style.display  = 'none';
+        document.getElementById('reserve-step-confirm').style.display = 'block';
+        document.getElementById('btn-confirm-reserve').disabled = false;
+    }
+
+    async function executeReserve() {
+        if (!reserveTargetUserId || !reserveSelectedRoom) return;
+        const btn = document.getElementById('btn-confirm-reserve');
+        clearAlert('reserve-alert');
+        setLoading(btn, true);
+        try {
+            await apiPost('/Reservations/manager-create', {
+                guestUserId:  reserveTargetUserId,
+                roomNumber:   reserveSelectedRoom.roomNumber,
+                checkInDate:  inputDateToApi(reserveSelectedRoom.checkIn),
+                checkOutDate: inputDateToApi(reserveSelectedRoom.checkOut)
+            });
+            closeReserveModal();
+            showAlert('alert-container', 'Reserva creada exitosamente para el huesped.', 'success');
+            await loadGuests();
+        } catch (error) {
+            showAlert('reserve-alert', error.message || 'Error al crear la reserva.', 'danger');
+        } finally {
+            setLoading(btn, false);
+        }
     }
 </script>
 </body>
